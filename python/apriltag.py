@@ -2,6 +2,18 @@ import cv2
 import numpy as np
 from pupil_apriltags import Detector
 from drawing import draw_pose, process_image
+import paho.mqtt.client as mqtt
+import os
+from dotenv import load_dotenv
+import certifi
+
+# Load the variables
+load_dotenv()
+
+mqtt_username = os.getenv("MQTT_USERNAME")
+mqtt_password = os.getenv("MQTT_PASSWORD")
+mqtt_host = os.getenv("MQTT_HOST")
+mqtt_port = int(os.getenv("MQTT_PORT"))
 
 camera_matrix = np.load("camera_calibration/camera_matrix.npy")
 dist_coeffs = np.load("camera_calibration/dist_coeffs.npy")
@@ -28,7 +40,36 @@ at_detector = Detector(
 
 cap = cv2.VideoCapture(0)
 
+# Callback for when the client receives a CONNACK response from the broker
+def on_connect(client, userdata, flags, reason_code):
+    print(f"Connected with code: {reason_code}")
+    client.subscribe("empilhadeira/controle")
+
+# Callback for when a PUBLISH message is received from the server
+def on_message(client, userdata, msg):
+    print(f"Topic: {msg.topic} | Payload: {msg.payload.decode()}")
+
+def start_mqtt():
+    global mqtt_client
+    print("starting mqtt...")
+    mqtt_client = mqtt.Client()
+    mqtt_client.tls_set(certifi.where())
+    mqtt_client.username_pw_set(username=mqtt_username, password=mqtt_password)
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+
+    mqtt_client.connect(mqtt_host, mqtt_port, 60)
+
+def step_mqtt():
+    global mqtt_client
+    mqtt_client.loop_read()
+    mqtt_client.loop_write()
+    mqtt_client.loop_misc()
+
+start_mqtt()
+
 while cap.isOpened():
+    step_mqtt()
     ret, frame = cap.read()
     if not ret:
         break
