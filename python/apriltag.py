@@ -6,6 +6,12 @@ import paho.mqtt.client as mqtt
 import os
 from dotenv import load_dotenv
 import certifi
+import serial
+import time
+
+# Arduino on UART is typically detected as /dev/serial0
+ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+time.sleep(2) # Wait for connection to initialize
 
 # Load the variables
 load_dotenv()
@@ -48,6 +54,7 @@ def on_connect(client, userdata, flags, reason_code):
 # Callback for when a PUBLISH message is received from the server
 def on_message(client, userdata, msg):
     print(f"Topic: {msg.topic} | Payload: {msg.payload.decode()}")
+    ser.write(msg.payload)
 
 def start_mqtt():
     global mqtt_client
@@ -112,9 +119,16 @@ while cap.isOpened():
             )
 
             coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])*100
-            tag_id = tag.tag_id
 
-            print(f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch}")
+            tag_id = tag.tag_id
+            x_coord = coords[0][0]
+            y_coord = coords[1][0]
+            z_coord = coords[2][0]
+
+            t = tag.pose_t.flatten()
+            distancia = np.linalg.norm(t)*100
+
+            print(f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch},distancia:{distancia}")
 
 
 cap.release()
