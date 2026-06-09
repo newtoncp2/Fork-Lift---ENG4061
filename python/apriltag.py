@@ -74,12 +74,6 @@ while cap.isOpened():
             tag_id = tag.tag_id
 
             print(f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch}")
-        
-    cv2.imshow('Recording...', undistorted)
-    
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
 
 cap.release()
-cv2.destroyAllWindows()
