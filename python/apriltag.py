@@ -9,8 +9,8 @@ import certifi
 import serial
 import time
 
-# Arduino on UART is typically detected as /dev/serial0
-ser = serial.Serial('/dev/serial0', 115200, timeout=1)
+# For Arduino Uno/Mega, it is usually '/dev/ttyACM0'. For Nano, it is often '/dev/ttyUSB0'
+ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
 time.sleep(2) # Wait for connection to initialize
 
 # Load the variables
