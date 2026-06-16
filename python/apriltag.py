@@ -10,7 +10,7 @@ import serial
 import time
 
 # Arduino on UART is typically detected as /dev/serial0
-ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+ser = serial.Serial('/dev/serial0', 115200, timeout=1)
 time.sleep(2) # Wait for connection to initialize
 
 # Load the variables
@@ -54,6 +54,8 @@ def on_connect(client, userdata, flags, reason_code):
 # Callback for when a PUBLISH message is received from the server
 def on_message(client, userdata, msg):
     print(f"Topic: {msg.topic} | Payload: {msg.payload.decode()}")
+
+    # Envia comandos do mqtt para o arduino
     ser.write(msg.payload)
 
 def start_mqtt():
@@ -75,60 +77,66 @@ def step_mqtt():
 
 start_mqtt()
 
-while cap.isOpened():
-    step_mqtt()
-    ret, frame = cap.read()
-    if not ret:
-        break
+try:
+    while cap.isOpened():
+        step_mqtt()
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-    # Remove camera distortion
-    undistorted = cv2.undistort(
-        frame,
-        camera_matrix,
-        dist_coeffs
-    )
+        # Remove camera distortion
+        undistorted = cv2.undistort(
+            frame,
+            camera_matrix,
+            dist_coeffs
+        )
 
-    # Turn grayscale
-    gray = cv2.cvtColor(
-        undistorted,
-        cv2.COLOR_BGR2GRAY
-    )
+        # Turn grayscale
+        gray = cv2.cvtColor(
+            undistorted,
+            cv2.COLOR_BGR2GRAY
+        )
 
-    # Detect AprilTags
-    tags = at_detector.detect(gray,
-        estimate_tag_pose=True,
-        camera_params=camera_params,
-        tag_size=tag_size) 
-    
-    if tags:
-        for idx, tag in enumerate(tags):
-            # Outline tag and write information
-            pitch = process_image(undistorted, tag)
+        # Detect AprilTags
+        tags = at_detector.detect(gray,
+            estimate_tag_pose=True,
+            camera_params=camera_params,
+            tag_size=tag_size) 
+        
+        if tags:
+            for idx, tag in enumerate(tags):
+                # Outline tag and write information
+                pitch = process_image(undistorted, tag)
 
-            # Build 4x4 pose matrix
-            pose = np.eye(4)
-            pose[:3, :3] = tag.pose_R
-            pose[:3, 3] = tag.pose_t.flatten()
+                # Build 4x4 pose matrix
+                pose = np.eye(4)
+                pose[:3, :3] = tag.pose_R
+                pose[:3, 3] = tag.pose_t.flatten()
 
-            # Draw XYZ axis
-            draw_pose(
-                undistorted,
-                camera_params,
-                tag_size,
-                pose
-            )
+                # Draw XYZ axis
+                draw_pose(
+                    undistorted,
+                    camera_params,
+                    tag_size,
+                    pose
+                )
 
-            coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])*100
+                coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])*100
 
-            tag_id = tag.tag_id
-            x_coord = coords[0][0]
-            y_coord = coords[1][0]
-            z_coord = coords[2][0]
+                tag_id = tag.tag_id
+                x_coord = coords[0][0]
+                y_coord = coords[1][0]
+                z_coord = coords[2][0]
 
-            t = tag.pose_t.flatten()
-            distancia = np.linalg.norm(t)*100
+                t = tag.pose_t.flatten()
+                distancia = np.linalg.norm(t)*100
 
-            print(f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch},distancia:{distancia}")
+                # TODO: Inserir tomada de decisão
+                coord_str = f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                print(coord_str)
+                # ser.write(coord_str)
 
-
-cap.release()
+except KeyboardInterrupt:
+    cap.release()
+    if ser != None:
+        ser.close()
