@@ -8,9 +8,15 @@ from dotenv import load_dotenv
 import certifi
 import serial
 import time
+import asyncio
+import websockets
 
 # For Arduino Uno/Mega, it is usually '/dev/ttyACM0'. For Nano, it is often '/dev/ttyUSB0'
-ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+try:
+    ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+except:
+    print("Erro ao conectar serial")
+
 time.sleep(2) # Wait for connection to initialize
 
 # Load the variables
@@ -20,6 +26,7 @@ mqtt_username = os.getenv("MQTT_USERNAME")
 mqtt_password = os.getenv("MQTT_PASSWORD")
 mqtt_host = os.getenv("MQTT_HOST")
 mqtt_port = int(os.getenv("MQTT_PORT"))
+web_socket_url = os.getenv("WEB_SOCKET_URL")
 
 camera_matrix = np.load("camera_calibration/camera_matrix.npy")
 dist_coeffs = np.load("camera_calibration/dist_coeffs.npy")
@@ -56,7 +63,10 @@ def on_message(client, userdata, msg):
     print(f"Topic: {msg.topic} | Payload: {msg.payload.decode()}")
 
     # Envia comandos do mqtt para o arduino
-    ser.write(msg.payload)
+    try:
+        ser.write(msg.payload)
+    except:
+        print("Erro ao conectar serial")
 
 def start_mqtt():
     global mqtt_client
@@ -75,68 +85,82 @@ def step_mqtt():
     mqtt_client.loop_write()
     mqtt_client.loop_misc()
 
+async def send_websocket(message):
+    async with websockets.connect(web_socket_url) as websocket:
+        await websocket.send(message)
+
 start_mqtt()
 
-try:
-    while cap.isOpened():
-        step_mqtt()
-        ret, frame = cap.read()
-        if not ret:
-            break
+async def main():
+    try:
+        while cap.isOpened():
+            step_mqtt()
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        # Remove camera distortion
-        undistorted = cv2.undistort(
-            frame,
-            camera_matrix,
-            dist_coeffs
-        )
+            # Remove camera distortion
+            undistorted = cv2.undistort(
+                frame,
+                camera_matrix,
+                dist_coeffs
+            )
 
-        # Turn grayscale
-        gray = cv2.cvtColor(
-            undistorted,
-            cv2.COLOR_BGR2GRAY
-        )
+            # Turn grayscale
+            gray = cv2.cvtColor(
+                undistorted,
+                cv2.COLOR_BGR2GRAY
+            )
 
-        # Detect AprilTags
-        tags = at_detector.detect(gray,
-            estimate_tag_pose=True,
-            camera_params=camera_params,
-            tag_size=tag_size) 
-        
-        if tags:
-            for idx, tag in enumerate(tags):
-                # Outline tag and write information
-                pitch = process_image(undistorted, tag)
+            # Detect AprilTags
+            tags = at_detector.detect(gray,
+                estimate_tag_pose=True,
+                camera_params=camera_params,
+                tag_size=tag_size) 
+            
+            if tags:
+                for idx, tag in enumerate(tags):
+                    # Outline tag and write information
+                    pitch = process_image(undistorted, tag)
 
-                # Build 4x4 pose matrix
-                pose = np.eye(4)
-                pose[:3, :3] = tag.pose_R
-                pose[:3, 3] = tag.pose_t.flatten()
+                    # Build 4x4 pose matrix
+                    pose = np.eye(4)
+                    pose[:3, :3] = tag.pose_R
+                    pose[:3, 3] = tag.pose_t.flatten()
 
-                # Draw XYZ axis
-                draw_pose(
-                    undistorted,
-                    camera_params,
-                    tag_size,
-                    pose
-                )
+                    # Draw XYZ axis
+                    draw_pose(
+                        undistorted,
+                        camera_params,
+                        tag_size,
+                        pose
+                    )
 
-                coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])*100
+                    coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])*100
 
-                tag_id = tag.tag_id
-                x_coord = coords[0][0]
-                y_coord = coords[1][0]
-                z_coord = coords[2][0]
+                    tag_id = tag.tag_id
+                    x_coord = coords[0][0]
+                    y_coord = coords[1][0]
+                    z_coord = coords[2][0]
 
-                t = tag.pose_t.flatten()
-                distancia = np.linalg.norm(t)*100
+                    t = tag.pose_t.flatten()
+                    distancia = np.linalg.norm(t)*100
 
-                # TODO: Inserir tomada de decisão
-                coord_str = f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
-                print(coord_str)
-                # ser.write(coord_str)
+                    # TODO: Inserir tomada de decisão
+                    coord_str = f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                    print(coord_str)
+                    # ser.write(coord_str)
 
-except KeyboardInterrupt:
-    cap.release()
-    if ser != None:
-        ser.close()
+            # Send image via websocket
+            ret, encoded_frame = cv2.imencode('.jpg', undistorted)
+
+            if ret:
+                await send_websocket(encoded_frame.tobytes())
+
+    except KeyboardInterrupt:
+        cap.release()
+        if ser != None:
+            ser.close()
+
+# Start the event loop and run the main() coroutine
+asyncio.run(main())
