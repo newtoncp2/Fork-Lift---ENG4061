@@ -88,13 +88,13 @@ def make_on_message(serial_port: Optional[object] = None):
 
             if serial_port:
                 if direction == "up":
-                    serial_port.write(f"{velocidade},{velocidade}".encode())
+                    serial_port.write(f"{velocidade},{velocidade}".encode(), timeout=1)
                 elif direction == "down":
-                    serial_port.write(f"{-velocidade},{-velocidade}".encode())
+                    serial_port.write(f"{-velocidade},{-velocidade}".encode(), timeout=1)
                 elif direction == "left":
-                    serial_port.write(f"{-velocidade},{velocidade}".encode())
+                    serial_port.write(f"{-velocidade},{velocidade}".encode(), timeout=1)
                 elif direction == "right":
-                    serial_port.write(f"{velocidade},{-velocidade}".encode())
+                    serial_port.write(f"{velocidade},{-velocidade}".encode(), timeout=1)
         except Exception as e:
             print("MQTT message handling error:", e)
 
