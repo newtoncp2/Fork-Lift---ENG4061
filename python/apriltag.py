@@ -65,7 +65,18 @@ def on_message(client, userdata, msg):
 
     # Envia comandos do mqtt para o arduino
     try:
-        ser.write(msg.payload)
+        direction = msg.payload.decode()["direcao"]
+        velocity = msg.payload.decode()["velocidade"]
+        
+        # Parse to "left_velocity,right_velocity" format
+        if direction == "up":
+            ser.write(f"{velocity},{velocity}".encode())
+        elif direction == "down":
+            ser.write(f"{-velocity},{-velocity}".encode())
+        elif direction == "left":
+            ser.write(f"{-velocity},{velocity}".encode())
+        elif direction == "right":
+            ser.write(f"{velocity},{-velocity}".encode())
     except:
         print("Erro ao conectar serial")
 
