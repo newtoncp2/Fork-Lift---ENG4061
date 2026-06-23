@@ -1,121 +1,51 @@
 import cv2
 import numpy as np
-from pupil_apriltags import Detector
 from .drawing import draw_pose, process_image
-import paho.mqtt.client as mqtt
-import os
-from dotenv import load_dotenv
-import certifi
-import serial
-import time
 import asyncio
-import websockets
-from pathlib import Path
-import json
-
-# For Arduino Uno/Mega, it is usually '/dev/ttyACM0'. For Nano, it is often '/dev/ttyUSB0'
-ser = None
-try:
-    ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
-except Exception:
-    print("Erro ao conectar serial")
-
-time.sleep(2) # Wait for connection to initialize
-
-# Load the variables
-load_dotenv()
-
-mqtt_username = os.getenv("MQTT_USERNAME")
-mqtt_password = os.getenv("MQTT_PASSWORD")
-mqtt_host = os.getenv("MQTT_HOST")
-mqtt_port = int(os.getenv("MQTT_PORT")) if os.getenv("MQTT_PORT") else None
-web_socket_url = os.getenv("WEB_SOCKET_URL")
-
-# Load camera calibration from project-level camera_calibration folder
-BASE_DIR = Path(__file__).resolve().parent.parent
-camera_matrix = np.load(str(BASE_DIR / "camera_calibration" / "camera_matrix.npy"))
-dist_coeffs = np.load(str(BASE_DIR / "camera_calibration" / "dist_coeffs.npy"))
-
-# fx, fy, cx, cy
-camera_params = (
-    camera_matrix[0, 0],
-    camera_matrix[1, 1],
-    camera_matrix[0, 2],
-    camera_matrix[1, 2]
+from .setup import setup_resources
+from .connections import (
+    create_and_start_mqtt,
+    step_mqtt as step_mqtt_client,
+    send_websocket as send_ws,
+    safe_disconnect,
+    make_on_connect,
+    make_on_message,
 )
 
-tag_size = 0.05
+# Centralized resource setup
+_RES = setup_resources()
 
-at_detector = Detector(
-   families="tag25h9",
-   nthreads=2,
-   quad_decimate=1.0,
-   quad_sigma=0.0,
-   refine_edges=1,
-   decode_sharpening=0.25,
-   debug=0
+# expose setup values as module-level names (existing code expects these)
+ser = _RES['ser']
+mqtt_username = _RES['mqtt_username']
+mqtt_password = _RES['mqtt_password']
+mqtt_host = _RES['mqtt_host']
+mqtt_port = _RES['mqtt_port']
+web_socket_url = _RES['web_socket_url']
+
+camera_matrix = _RES['camera_matrix']
+dist_coeffs = _RES['dist_coeffs']
+camera_params = _RES['camera_params']
+tag_size = _RES['tag_size']
+at_detector = _RES['at_detector']
+cap = _RES['cap']
+
+# MQTT callbacks are created in `fork_lift.connections` using factories
+
+print("starting mqtt...")
+# create and start the mqtt client (connection attempt is non-fatal)
+mqtt_client = create_and_start_mqtt(
+    mqtt_username,
+    mqtt_password,
+    mqtt_host,
+    mqtt_port,
+    on_connect=make_on_connect(["empilhadeira/controle"]),
+    on_message=make_on_message(ser),
 )
-
-cap = cv2.VideoCapture(0)
-
-# Callback for when the client receives a CONNACK response from the broker
-def on_connect(client, userdata, flags, reason_code):
-    print(f"Connected with code: {reason_code}")
-    client.subscribe("empilhadeira/controle")
-
-# Callback for when a PUBLISH message is received from the server
-def on_message(client, userdata, msg):
-    print(f"Topic: {msg.topic} | Payload: {msg.payload.decode()}")
-
-    # Envia comandos do mqtt para o arduino
-    try:
-        json_string = json.loads(msg.payload.decode())
-        direction = json_string["direcao"]
-        velocity = int(json_string["velocidade"])
-        
-        # Parse to "left_velocity,right_velocity" format
-        if direction == "up":
-            ser.write(f"{velocity},{velocity}".encode())
-        elif direction == "down":
-            ser.write(f"{-velocity},{-velocity}".encode())
-        elif direction == "left":
-            ser.write(f"{-velocity},{velocity}".encode())
-        elif direction == "right":
-            ser.write(f"{velocity},{-velocity}".encode())
-    except Exception as e:
-        print(e)
-        print("Erro ao conectar enviar mensagem ao serial")
-
-def start_mqtt():
-    global mqtt_client
-    print("starting mqtt...")
-    mqtt_client = mqtt.Client()
-    mqtt_client.tls_set(certifi.where())
-    if mqtt_username and mqtt_password:
-        mqtt_client.username_pw_set(username=mqtt_username, password=mqtt_password)
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-
-    if mqtt_host and mqtt_port:
-        mqtt_client.connect(mqtt_host, mqtt_port, 60)
-
-def step_mqtt():
-    global mqtt_client
-    mqtt_client.loop_read()
-    mqtt_client.loop_write()
-    mqtt_client.loop_misc()
-
-async def send_websocket(message):
-    if not web_socket_url:
-        return
-    async with websockets.connect(web_socket_url) as websocket:
-        await websocket.send(message)
-
-start_mqtt()
 
 async def main():
     while cap.isOpened():
-        step_mqtt()
+        step_mqtt_client(mqtt_client)
         ret, frame = cap.read()
         if not ret:
             break
@@ -176,10 +106,7 @@ async def main():
         ret, encoded_frame = cv2.imencode('.jpg', undistorted)
 
         if ret:
-            try:
-                await send_websocket(encoded_frame.tobytes())
-            except Exception as e:
-                pass
+            await send_ws(web_socket_url, encoded_frame.tobytes())
 
 def _run_main():
     try:
@@ -190,7 +117,7 @@ def _run_main():
         if ser is not None:
             ser.close()
         try:
-            mqtt_client.disconnect()
+            safe_disconnect(mqtt_client)
         except Exception:
             pass
 
