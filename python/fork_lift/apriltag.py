@@ -1,3 +1,5 @@
+import os
+import logging
 import cv2
 import numpy as np
 from .drawing import draw_pose, process_image
@@ -33,6 +35,20 @@ tag_size = _RES['tag_size']
 at_detector = _RES['at_detector']
 cap = _RES['cap']
 
+# runtime `debug` variable controls debug logging; can be overridden by
+# setting the environment variable `DEBUG=1` (or 'true', 'yes'). Users can also
+# set `fork_lift.apriltag.debug = True` before calling functions in this module
+# to enable debug logging programmatically.
+debug = os.getenv("DEBUG", "0").lower() in ("1", "true", "yes")
+
+# Configure logging according to `debug` variable. Consumers of this package
+# may reconfigure the logging handlers if they prefer different formatting.
+_level = logging.DEBUG if debug else logging.INFO
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s:%(name)s: %(message)s", level=_level
+)
+logger = logging.getLogger(__name__)
+
 # MQTT callbacks are created in `fork_lift.connections` using factories
 
 frame_queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=1)
@@ -40,7 +56,7 @@ ws_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=1)
 command_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
-print("starting mqtt...")
+logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
 mqtt_client = create_and_start_mqtt(
     mqtt_username,
@@ -111,7 +127,7 @@ def _vision_worker():
                     f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
                     f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
                 )
-                print(coord_str)
+                logger.debug(coord_str)
 
         ret, encoded_frame = cv2.imencode('.jpg', undistorted)
         if ret:
@@ -152,7 +168,7 @@ def _run_main():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nInterrupted by user")
+        logger.info("Interrupted by user")
     finally:
         stop_event.set()
         cap.release()
