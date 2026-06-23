@@ -1,8 +1,6 @@
 import os
 import logging
-import cv2
 import numpy as np
-from .drawing import draw_pose, process_image
 import asyncio
 import queue
 import threading
@@ -82,6 +80,11 @@ def _put_latest(work_queue: queue.Queue, value):
 
 
 def _capture_worker():
+    """Capture frames from camera if available."""
+    if cap is None:
+        logger.info("Camera not available, skipping capture")
+        return
+        
     while not stop_event.is_set() and cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -91,47 +94,61 @@ def _capture_worker():
 
 
 def _vision_worker():
+    """Process frames for tags if detector is available."""
+    if at_detector is None:
+        logger.info("AprilTag detector not available, skipping vision processing")
+        return
+    
+    try:
+        import cv2
+        from .drawing import draw_pose, process_image
+    except ImportError as e:
+        logger.warning(f"Vision dependencies not available: {e}")
+        return
+    
     while not stop_event.is_set():
         try:
             frame = frame_queue.get(timeout=0.2)
         except queue.Empty:
             continue
 
-        undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
-        gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
+        try:
+            undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
+            gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-        
-        tags = at_detector.detect(
-            gray,
-            estimate_tag_pose=True,
-            camera_params=camera_params,
-            tag_size=tag_size,
-        )
+            tags = at_detector.detect(
+                gray,
+                estimate_tag_pose=True,
+                camera_params=camera_params,
+                tag_size=tag_size,
+            )
 
-        if tags:
-            for tag in tags:
-                pitch = process_image(undistorted, tag)
+            if tags:
+                for tag in tags:
+                    pitch = process_image(undistorted, tag)
 
-                pose = np.eye(4)
-                pose[:3, :3] = tag.pose_R
-                pose[:3, 3] = tag.pose_t.flatten()
+                    pose = np.eye(4)
+                    pose[:3, :3] = tag.pose_R
+                    pose[:3, 3] = tag.pose_t.flatten()
 
-                draw_pose(undistorted, camera_params, tag_size, pose)
+                    draw_pose(undistorted, camera_params, tag_size, pose)
 
-                coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]]) * 100
-                t = tag.pose_t.flatten()
-                distancia = np.linalg.norm(t) * 100
+                    coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]]) * 100
+                    t = tag.pose_t.flatten()
+                    distancia = np.linalg.norm(t) * 100
 
-                # TODO: fazer lógica de controle
-                coord_str = (
-                    f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
-                    f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
-                )
-                logger.debug(coord_str)
+                    # TODO: fazer lógica de controle
+                    coord_str = (
+                        f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
+                        f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                    )
+                    logger.debug(coord_str)
 
-        ret, encoded_frame = cv2.imencode('.jpg', undistorted)
-        if ret:
-            _put_latest(ws_queue, encoded_frame.tobytes())
+            ret, encoded_frame = cv2.imencode('.jpg', undistorted)
+            if ret:
+                _put_latest(ws_queue, encoded_frame.tobytes())
+        except Exception as e:
+            logger.debug(f"Vision processing error: {e}")
 
 
 async def _websocket_sender():
@@ -171,9 +188,16 @@ def _run_main():
         logger.info("Interrupted by user")
     finally:
         stop_event.set()
-        cap.release()
+        if cap is not None:
+            try:
+                cap.release()
+            except Exception:
+                pass
         if ser is not None:
-            ser.close()
+            try:
+                ser.close()
+            except Exception:
+                pass
         try:
             mqtt_client.loop_stop()
         except Exception:

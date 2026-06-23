@@ -2,33 +2,83 @@ import certifi
 import json
 import queue
 import threading
+import logging
 from typing import Iterable, Optional
+
+logger = logging.getLogger(__name__)
 
 def create_and_start_mqtt(username, password, host, port, on_connect=None, on_message=None):
     """Create, configure and (optionally) connect an MQTT client.
 
-    Returns the paho.mqtt.client.Client instance. Connection is attempted
-    only if `host` and `port` are provided.
+    Returns the paho.mqtt.client.Client instance or a mock if unavailable.
+    Connection is attempted only if `host` and `port` are provided.
     """
-    import paho.mqtt.client as mqtt
+    try:
+        import paho.mqtt.client as mqtt
 
-    client = mqtt.Client()
-    client.tls_set(certifi.where())
-    if username and password:
-        client.username_pw_set(username=username, password=password)
-    if on_connect:
-        client.on_connect = on_connect
-    if on_message:
-        client.on_message = on_message
+        client = mqtt.Client()
+        client.tls_set(certifi.where())
+        if username and password:
+            client.username_pw_set(username=username, password=password)
+        if on_connect:
+            client.on_connect = on_connect
+        if on_message:
+            client.on_message = on_message
 
-    if host and port:
-        try:
-            client.connect(host, port, 60)
-        except Exception:
-            # Do not raise; caller can handle missing broker at runtime
-            pass
+        if host and port:
+            try:
+                client.connect(host, port, 60)
+            except Exception as e:
+                logger.debug(f"MQTT connection failed: {e}")
+                pass
 
-    return client
+        return client
+    except ImportError:
+        logger.debug("paho-mqtt not available, creating mock MQTT client")
+        return _MockMQTTClient()
+
+
+class _MockMQTTClient:
+    """Mock MQTT client for when paho-mqtt is not available."""
+    
+    def __init__(self):
+        self.user_data = None
+    
+    def tls_set(self, *args, **kwargs):
+        pass
+    
+    def username_pw_set(self, *args, **kwargs):
+        pass
+    
+    def on_connect(self, *args, **kwargs):
+        pass
+    
+    def on_message(self, *args, **kwargs):
+        pass
+    
+    def connect(self, *args, **kwargs):
+        pass
+    
+    def user_data_set(self, data):
+        self.user_data = data
+    
+    def loop_start(self):
+        pass
+    
+    def loop_stop(self):
+        pass
+    
+    def disconnect(self):
+        pass
+    
+    def loop_read(self):
+        pass
+    
+    def loop_write(self):
+        pass
+    
+    def loop_misc(self):
+        pass
 
 def step_mqtt(client):
     """Run a single mqtt client network step (non-blocking)."""
@@ -50,11 +100,15 @@ def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_eve
             except queue.Empty:
                 continue
 
+            if serial_port is None:
+                logger.debug(f"Serial port not available, discarding command: {cmd}")
+                command_queue.task_done()
+                continue
+
             try:
-                if serial_port:
-                    serial_port.write(cmd.encode())
+                serial_port.write(cmd.encode())
             except Exception as e:
-                print("Serial writer error:", e)
+                logger.debug(f"Serial writer error: {e}")
             finally:
                 command_queue.task_done()
 
@@ -66,13 +120,15 @@ async def send_websocket(url, message):
     """Send a message to a websocket server (no-op if url falsy)."""
     if not url:
         return
-    import websockets
     try:
-        async with websockets.connect(url) as websocket:
-            await websocket.send(message)
-    except Exception:
-        # ignore errors; caller may log
-        pass
+        import websockets
+        try:
+            async with websockets.connect(url) as websocket:
+                await websocket.send(message)
+        except Exception as e:
+            logger.debug(f"WebSocket send error: {e}")
+    except ImportError:
+        logger.debug("websockets not available for sending")
 
 def safe_disconnect(client):
     try:
@@ -116,7 +172,7 @@ def make_on_message(serial_port: Optional[object] = None):
     def _on_message(client, userdata, msg):
         try:
             payload = msg.payload.decode()
-            print(f"Topic: {msg.topic} | Payload: {payload}")
+            logger.info(f"Topic: {msg.topic} | Payload: {payload}")
             json_string = json.loads(payload)
             direction = json_string.get("direcao")
             velocidade = int(json_string.get("velocidade", 0))
@@ -127,8 +183,13 @@ def make_on_message(serial_port: Optional[object] = None):
             if command_queue and command:
                 command_queue.put(command)
             elif serial_port and command:
-                serial_port.write(command.encode())
+                try:
+                    serial_port.write(command.encode())
+                except Exception as e:
+                    logger.debug(f"Serial write error: {e}")
+            else:
+                logger.debug(f"Command not sent (no destination): {command}")
         except Exception as e:
-            print("MQTT message handling error:", e)
+            logger.debug(f"MQTT message handling error: {e}")
 
     return _on_message
