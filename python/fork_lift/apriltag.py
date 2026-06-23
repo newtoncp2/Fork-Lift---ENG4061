@@ -2,14 +2,17 @@ import cv2
 import numpy as np
 from .drawing import draw_pose, process_image
 import asyncio
+import queue
+import threading
+import time
 from .setup import setup_resources
 from .connections import (
     create_and_start_mqtt,
-    step_mqtt as step_mqtt_client,
     send_websocket as send_ws,
     safe_disconnect,
     make_on_connect,
     make_on_message,
+    start_serial_writer,
 )
 
 # Centralized resource setup
@@ -32,6 +35,11 @@ cap = _RES['cap']
 
 # MQTT callbacks are created in `fork_lift.connections` using factories
 
+frame_queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=1)
+ws_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=1)
+command_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
+stop_event = threading.Event()
+
 print("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
 mqtt_client = create_and_start_mqtt(
@@ -42,80 +50,118 @@ mqtt_client = create_and_start_mqtt(
     on_connect=make_on_connect(["empilhadeira/controle"]),
     on_message=make_on_message(ser),
 )
+mqtt_client.user_data_set({"command_queue": command_queue})
 
-async def main():
-    while cap.isOpened():
-        step_mqtt_client(mqtt_client)
+
+def _put_latest(work_queue: queue.Queue, value):
+    if work_queue.full():
+        try:
+            work_queue.get_nowait()
+        except queue.Empty:
+            pass
+    try:
+        work_queue.put_nowait(value)
+    except queue.Full:
+        pass
+
+
+def _capture_worker():
+    while not stop_event.is_set() and cap.isOpened():
         ret, frame = cap.read()
         if not ret:
-            break
+            time.sleep(0.01)
+            continue
+        _put_latest(frame_queue, frame)
 
-        # Remove camera distortion
-        undistorted = cv2.undistort(
-            frame,
-            camera_matrix,
-            dist_coeffs
-        )
 
-        # Turn grayscale
-        gray = cv2.cvtColor(
-            undistorted,
-            cv2.COLOR_BGR2GRAY
-        )
+def _vision_worker():
+    while not stop_event.is_set():
+        try:
+            frame = frame_queue.get(timeout=0.2)
+        except queue.Empty:
+            continue
 
-        # Detect AprilTags
-        tags = at_detector.detect(gray,
+        undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
+        gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
+
+        
+        tags = at_detector.detect(
+            gray,
             estimate_tag_pose=True,
             camera_params=camera_params,
-            tag_size=tag_size) 
-        
+            tag_size=tag_size,
+        )
+
         if tags:
-            for idx, tag in enumerate(tags):
-                # Outline tag and write information
+            for tag in tags:
                 pitch = process_image(undistorted, tag)
 
-                # Build 4x4 pose matrix
                 pose = np.eye(4)
                 pose[:3, :3] = tag.pose_R
                 pose[:3, 3] = tag.pose_t.flatten()
 
-                # Draw XYZ axis
-                draw_pose(
-                    undistorted,
-                    camera_params,
-                    tag_size,
-                    pose
-                )
+                draw_pose(undistorted, camera_params, tag_size, pose)
 
-                coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])*100
-
-                tag_id = tag.tag_id
-                x_coord = coords[0][0]
-                y_coord = coords[1][0]
-                z_coord = coords[2][0]
-
+                coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]]) * 100
                 t = tag.pose_t.flatten()
-                distancia = np.linalg.norm(t)*100
+                distancia = np.linalg.norm(t) * 100
 
-                # TODO: Inserir tomada de decisão
-                coord_str = f"id:{tag_id},x:{coords[0][0]},y:{coords[1][0]},z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                # TODO: fazer lógica de controle
+                coord_str = (
+                    f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
+                    f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                )
                 print(coord_str)
-                # ser.write(coord_str)
 
-        # Send image via websocket
         ret, encoded_frame = cv2.imencode('.jpg', undistorted)
-
         if ret:
-            await send_ws(web_socket_url, encoded_frame.tobytes())
+            _put_latest(ws_queue, encoded_frame.tobytes())
+
+
+async def _websocket_sender():
+    while not stop_event.is_set():
+        try:
+            payload = ws_queue.get_nowait()
+        except queue.Empty:
+            await asyncio.sleep(0.01)
+            continue
+        await send_ws(web_socket_url, payload)
+
+async def main():
+    serial_thread = start_serial_writer(ser, command_queue, stop_event)
+    capture_thread = threading.Thread(target=_capture_worker, name="capture-worker", daemon=True)
+    vision_thread = threading.Thread(target=_vision_worker, name="vision-worker", daemon=True)
+
+    capture_thread.start()
+    vision_thread.start()
+
+    try:
+        mqtt_client.loop_start()
+    except Exception:
+        pass
+
+    try:
+        await _websocket_sender()
+    finally:
+        stop_event.set()
+        capture_thread.join(timeout=1.0)
+        vision_thread.join(timeout=1.0)
+        serial_thread.join(timeout=1.0)
 
 def _run_main():
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nInterrupted by user")
+    finally:
+        stop_event.set()
         cap.release()
         if ser is not None:
             ser.close()
+        try:
+            mqtt_client.loop_stop()
+        except Exception:
+            pass
         try:
             safe_disconnect(mqtt_client)
         except Exception:

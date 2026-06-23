@@ -7,6 +7,7 @@ from pupil_apriltags import Detector
 import cv2
 from dotenv import load_dotenv
 
+
 def setup_resources(base_dir: str | None = None):
     """Initialize and return runtime resources as a dict.
 
@@ -19,7 +20,7 @@ def setup_resources(base_dir: str | None = None):
     # Try serial connection (non-fatal)
     ser = None
     try:
-        ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+        ser = serial.Serial("/dev/ttyACM0", 115200, timeout=1)
     except Exception:
         # leave ser as None if not available
         ser = None
@@ -50,34 +51,34 @@ def setup_resources(base_dir: str | None = None):
         camera_matrix[0, 0],
         camera_matrix[1, 1],
         camera_matrix[0, 2],
-        camera_matrix[1, 2]
+        camera_matrix[1, 2],
     )
 
     tag_size = 0.05
 
     at_detector = Detector(
-       families="tag25h9",
-       nthreads=2,
-       quad_decimate=1.0,
-       quad_sigma=0.0,
-       refine_edges=1,
-       decode_sharpening=0.25,
-       debug=0
+        families="tag25h9",
+        nthreads=1,
+        quad_decimate=1.0,
+        quad_sigma=0.0,
+        refine_edges=1,
+        decode_sharpening=0.25,
+        debug=0,
     )
 
     cap = cv2.VideoCapture(0)
 
     return {
-        'ser': ser,
-        'mqtt_username': mqtt_username,
-        'mqtt_password': mqtt_password,
-        'mqtt_host': mqtt_host,
-        'mqtt_port': mqtt_port,
-        'web_socket_url': web_socket_url,
-        'camera_matrix': camera_matrix,
-        'dist_coeffs': dist_coeffs,
-        'camera_params': camera_params,
-        'tag_size': tag_size,
-        'at_detector': at_detector,
-        'cap': cap,
+        "ser": ser,
+        "mqtt_username": mqtt_username,
+        "mqtt_password": mqtt_password,
+        "mqtt_host": mqtt_host,
+        "mqtt_port": mqtt_port,
+        "web_socket_url": web_socket_url,
+        "camera_matrix": camera_matrix,
+        "dist_coeffs": dist_coeffs,
+        "camera_params": camera_params,
+        "tag_size": tag_size,
+        "at_detector": at_detector,
+        "cap": cap,
     }

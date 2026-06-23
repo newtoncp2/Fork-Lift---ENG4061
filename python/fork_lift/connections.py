@@ -1,5 +1,7 @@
 import certifi
 import json
+import queue
+import threading
 from typing import Iterable, Optional
 
 def create_and_start_mqtt(username, password, host, port, on_connect=None, on_message=None):
@@ -37,6 +39,28 @@ def step_mqtt(client):
     except Exception:
         # ignore network errors here; callers may log
         pass
+
+
+def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_event: threading.Event):
+    """Start a dedicated thread that performs blocking serial writes from a queue."""
+    def _worker():
+        while not stop_event.is_set():
+            try:
+                cmd = command_queue.get(timeout=0.2)
+            except queue.Empty:
+                continue
+
+            try:
+                if serial_port:
+                    serial_port.write(cmd.encode())
+            except Exception as e:
+                print("Serial writer error:", e)
+            finally:
+                command_queue.task_done()
+
+    thread = threading.Thread(target=_worker, name="serial-writer", daemon=True)
+    thread.start()
+    return thread
 
 async def send_websocket(url, message):
     """Send a message to a websocket server (no-op if url falsy)."""
@@ -78,6 +102,17 @@ def make_on_message(serial_port: Optional[object] = None):
     The callback expects payloads like {"direcao": "up", "velocidade": "100"}.
     If `serial_port` is falsy, the function will only log the parsed command.
     """
+    def _to_serial_command(direction: Optional[str], velocidade: int) -> Optional[str]:
+        if direction == "up":
+            return f"{velocidade},{velocidade}"
+        if direction == "down":
+            return f"{-velocidade},{-velocidade}"
+        if direction == "left":
+            return f"{-velocidade},{velocidade}"
+        if direction == "right":
+            return f"{velocidade},{-velocidade}"
+        return None
+
     def _on_message(client, userdata, msg):
         try:
             payload = msg.payload.decode()
@@ -86,15 +121,13 @@ def make_on_message(serial_port: Optional[object] = None):
             direction = json_string.get("direcao")
             velocidade = int(json_string.get("velocidade", 0))
 
-            if serial_port:
-                if direction == "up":
-                    serial_port.write(f"{velocidade},{velocidade}".encode(), timeout=1)
-                elif direction == "down":
-                    serial_port.write(f"{-velocidade},{-velocidade}".encode(), timeout=1)
-                elif direction == "left":
-                    serial_port.write(f"{-velocidade},{velocidade}".encode(), timeout=1)
-                elif direction == "right":
-                    serial_port.write(f"{velocidade},{-velocidade}".encode(), timeout=1)
+            command_queue = userdata.get("command_queue") if isinstance(userdata, dict) else None
+            command = _to_serial_command(direction, velocidade)
+
+            if command_queue and command:
+                command_queue.put(command)
+            elif serial_port and command:
+                serial_port.write(command.encode())
         except Exception as e:
             print("MQTT message handling error:", e)
 
