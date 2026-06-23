@@ -1,3 +1,14 @@
+"""Communication module for Fork Lift application.
+
+This module handles all external communications:
+- MQTT broker connection for receiving control commands
+- Serial port communication with hardware (microcontroller)
+- WebSocket communication for streaming video or telemetry
+- Command parsing and routing
+
+All communication components are optional and the application will degrade
+gracefully if any communication method is unavailable.
+"""
 import certifi
 import json
 import queue
@@ -10,8 +21,22 @@ logger = logging.getLogger(__name__)
 def create_and_start_mqtt(username, password, host, port, on_connect=None, on_message=None):
     """Create, configure and (optionally) connect an MQTT client.
 
-    Returns the paho.mqtt.client.Client instance or a mock if unavailable.
-    Connection is attempted only if `host` and `port` are provided.
+    Attempts to create and configure an MQTT client using the paho-mqtt library.
+    If paho-mqtt is not installed, returns a mock client that accepts all calls
+    but does nothing, allowing the application to continue running.
+
+    Args:
+        username (str | None): Username for MQTT authentication
+        password (str | None): Password for MQTT authentication
+        host (str | None): MQTT broker hostname or IP address
+        port (int | None): MQTT broker port number
+        on_connect (callable | None): Callback function for connection events
+        on_message (callable | None): Callback function for received messages
+
+    Returns:
+        paho.mqtt.client.Client | _MockMQTTClient: MQTT client instance.
+            A real client if paho-mqtt is available, a mock client otherwise.
+            Connection is only attempted if both host and port are provided.
     """
     try:
         import paho.mqtt.client as mqtt
