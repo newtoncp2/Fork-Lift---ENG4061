@@ -2,11 +2,11 @@
 
 Run this from the `python` folder to start the application:
 
-    python run_apriltag.py
+    python run_raspberry.py
 
-This forwards to the `fork_lift` package entrypoint.
+This forwards to the `raspberry_pi` package entrypoint.
 """
-from fork_lift.apriltag import _run_main
+from raspberry_pi.apriltag import _run_main
 
 if __name__ == '__main__':
     _run_main()
