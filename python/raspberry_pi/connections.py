@@ -180,30 +180,32 @@ def make_on_connect(subscribe_topics: Optional[Iterable[str]] = None):
 def make_on_message(serial_port: Optional[object] = None):
     """Return an `on_message` callback that parses JSON payloads and writes to serial.
 
-    The callback expects payloads like {"direcao": "up", "velocidade": "100"}.
+    The callback expects payloads like {"modo": True, "direcao": "up", "velocidade": "100"}.
     If `serial_port` is falsy, the function will only log the parsed command.
     """
-    def _to_serial_command(direction: Optional[str], velocidade: int) -> Optional[str]:
-        if direction == "up":
-            return f"{velocidade},{velocidade}"
-        if direction == "down":
-            return f"{-velocidade},{-velocidade}"
-        if direction == "left":
-            return f"{-velocidade},{velocidade}"
-        if direction == "right":
-            return f"{velocidade},{-velocidade}"
-        return None
+    def _to_serial_command(modo: Optional[str], direction: Optional[str], velocidade: int) -> Optional[str]:
+        if modo:
+            if direction == "up":
+                return f"0 {velocidade},{velocidade}"
+            if direction == "down":
+                return f"0 {-velocidade},{-velocidade}"
+            if direction == "left":
+                return f"0 {-velocidade},{velocidade}"
+            if direction == "right":
+                return f"0 {velocidade},{-velocidade}"
+            return None
 
     def _on_message(client, userdata, msg):
         try:
             payload = msg.payload.decode()
             logger.info(f"Topic: {msg.topic} | Payload: {payload}")
             json_string = json.loads(payload)
+            modo = json_string.get("modo")
             direction = json_string.get("direcao")
             velocidade = int(json_string.get("velocidade", 0))
 
             command_queue = userdata.get("command_queue") if isinstance(userdata, dict) else None
-            command = _to_serial_command(direction, velocidade)
+            command = _to_serial_command(modo, direction, velocidade)
 
             if command_queue and command:
                 command_queue.put(command)
