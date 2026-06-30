@@ -1,0 +1,227 @@
+:root{
+  --bg: #0e1014;
+  --panel: #16191f;
+  --line: #3a3f4a;
+  --line-bright: #6c7686;
+  --accent: #4fd1c5;
+  --text: #e6e8eb;
+  --text-dim: #8b919c;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.stage{
+  display:flex;
+  align-items:center;
+  gap: 90px;
+  padding: 60px;
+}
+
+/* ---------- D-PAD ---------- */
+.dpad{
+  position:relative;
+  width: 260px;
+  height: 260px;
+}
+
+.dbtn{
+  position:absolute;
+  width: 78px;
+  height: 78px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: border-color .15s ease, background .15s ease, transform .08s ease;
+}
+
+.dbtn svg{
+  stroke: var(--line-bright);
+  transition: stroke .15s ease;
+}
+
+.dbtn:hover{
+  border-color: var(--accent);
+}
+.dbtn:hover svg{
+  stroke: var(--accent);
+}
+
+.dbtn:active,
+.dbtn.is-active{
+  background: rgba(79, 209, 197, 0.12);
+  border-color: var(--accent);
+  transform: scale(0.94);
+}
+.dbtn:active svg,
+.dbtn.is-active svg{
+  stroke: var(--accent);
+}
+
+.dbtn:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dbtn.up    { top: 0;    left: 50%; transform: translateX(-50%); }
+.dbtn.down  { bottom: 0; left: 50%; transform: translateX(-50%); }
+.dbtn.left  { left: 0;   top: 50%;  transform: translateY(-50%); }
+.dbtn.right { right: 0;  top: 50%;  transform: translateY(-50%); }
+
+/* ---------- MODO MANUAL ---------- */
+.manual-toggle{
+  align-self: flex-start;
+  margin-top: 0;
+  width: 188px;
+  padding: 14px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: 6px;
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.manual-toggle-title{
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.manual-toggle-action{
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text);
+}
+
+.manual-toggle:hover{
+  border-color: var(--accent);
+}
+
+.manual-toggle:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* desligado = vermelho/atenção (precisa ligar antes de usar os controles) */
+.manual-toggle[data-manual="false"] .manual-toggle-action{
+  color: #e8807a;
+}
+
+/* ligado = verde/ativo */
+.manual-toggle[data-manual="true"]{
+  border-color: var(--accent);
+  background: rgba(79, 209, 197, 0.10);
+}
+.manual-toggle[data-manual="true"] .manual-toggle-action{
+  color: var(--accent);
+}
+
+/* ---------- CONTROLES BLOQUEADOS (modo manual desligado) ---------- */
+.dbtn:disabled,
+.vslider:disabled{
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- SLIDER ---------- */
+.speed-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 16px;
+}
+
+.speed-label{
+  font-size: 15px;
+  letter-spacing: .03em;
+  color: var(--text);
+}
+
+.speed-track-wrap{
+  position:relative;
+  width: 60px;
+  height: 280px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  display:flex;
+  justify-content:center;
+  padding: 18px 0;
+}
+
+.speed-track-wrap::before{
+  content:"";
+  position:absolute;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+}
+
+input[type="range"].vslider {
+   writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+
+  width: 24px;
+  height: 244px;
+
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
+input[type="range"].vslider::-webkit-slider-runnable-track{
+  height: 2px;
+  background: transparent;
+}
+input[type="range"].vslider::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #0e1014;
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: pointer;
+  margin-top: 0;
+}
+
+input[type="range"].vslider::-moz-range-track{
+  height: 2px;
+  background: transparent;
+}
+input[type="range"].vslider::-moz-range-thumb{
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #0e1014;
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: pointer;
+}
+
+.speed-value{
+  font-size: 13px;
+  color: var(--text-dim);
+  min-width: 3ch;
+  text-align:center;
+}
