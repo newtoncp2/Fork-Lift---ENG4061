@@ -180,11 +180,11 @@ def make_on_connect(subscribe_topics: Optional[Iterable[str]] = None):
 def make_on_message(serial_port: Optional[object] = None):
     """Return an `on_message` callback that parses JSON payloads and writes to serial.
 
-    The callback expects payloads like {"modo": True, "direcao": "up", "velocidade": "100"}.
+    The callback expects payloads like {"modo": 0, "direcao": "up", "velocidade": "100"}.
     If `serial_port` is falsy, the function will only log the parsed command.
     """
     def _to_serial_command(modo: Optional[str], direction: Optional[str], velocidade: int) -> Optional[str]:
-        if modo:
+        if modo == 0:
             if direction == "up":
                 return f"0 {velocidade},{velocidade}"
             if direction == "down":
@@ -193,6 +193,14 @@ def make_on_message(serial_port: Optional[object] = None):
                 return f"0 {-velocidade},{velocidade}"
             if direction == "right":
                 return f"0 {velocidade},{-velocidade}"
+            return None
+        if modo == 1:
+            return "1"
+        if modo == 3:
+            if direction == "up":
+                return f"3 {velocidade}"
+            if direction == "down":
+                return f"3 {-velocidade}"
             return None
 
     def _on_message(client, userdata, msg):
