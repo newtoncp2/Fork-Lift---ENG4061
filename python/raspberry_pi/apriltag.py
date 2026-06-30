@@ -135,12 +135,14 @@ def _vision_worker():
 
                     coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]]) * 100
                     t = tag.pose_t.flatten()
-                    distancia = np.linalg.norm(t) * 100
+                    distancia = np.linalg.norm(t) * 100 - 20
+                    z_coord = coords[2][0] - 20  # Adjusted z-coordinate based on distance  
+                    y_coord = coords[1][0]                  
 
                     # TODO: fazer lógica de controle
                     coord_str = (
-                        f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
-                        f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                        f"id:{tag.tag_id},x:{coords[0][0]},y:{y_coord},"
+                        f"z:{z_coord},pitch:{pitch},distancia:{distancia}"
                     )
                     logger.debug(coord_str)
 
