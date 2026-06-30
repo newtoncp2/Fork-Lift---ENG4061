@@ -54,6 +54,9 @@ ws_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=1)
 command_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
+last_tag = 0
+SEARCH_MODE_TIMEOUT = 6.0  # seconds without tag detection before sending search mode command
+
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
 mqtt_client = create_and_start_mqtt(
@@ -95,6 +98,8 @@ def _capture_worker():
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
+    global last_tag
+    
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
         return
@@ -106,7 +111,8 @@ def _vision_worker():
         logger.warning(f"Vision dependencies not available: {e}")
         return
     
-    while not stop_event.is_set():
+    while not stop_event.is_set():        
+        # Get the latest frame from the queue, if available
         try:
             frame = frame_queue.get(timeout=0.2)
         except queue.Empty:
@@ -124,6 +130,7 @@ def _vision_worker():
             )
 
             if tags:
+                last_tag = time.time()
                 for tag in tags:
                     pitch = process_image(undistorted, tag)
 
@@ -143,6 +150,11 @@ def _vision_worker():
                         f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
                     )
                     logger.debug(coord_str)
+                    
+            if time.time() - last_tag > SEARCH_MODE_TIMEOUT:
+                last_tag = time.time()
+                logger.debug(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
+                command_queue.put("2")
 
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
