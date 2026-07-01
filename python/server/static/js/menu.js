@@ -72,7 +72,9 @@ modeToggle.addEventListener('click', () => {
 
   setMode(nextMode);
   console.log('Modo alterado para:', nextMode);
-  enviaDados();
+  if (nextMode === 1) { // Se for modo autônomo, envia imediatamente
+    enviaDados();
+  }
 });
 
 setMode(0); // Inicializa no modo manual
@@ -82,7 +84,7 @@ setMode(0); // Inicializa no modo manual
 function iniciarMovimento(direcao) {
   dadosMovimento.direcao = direcao;
   
-  if (direcao.startsWith('fork-')) {
+  if (dadosMovimento.modo === 3) { // Se estiver no modo Garfo, usa a velocidade do garfo
     dadosMovimento.velocidade = velocidadeGarfoConfigurada;
   } else {
     dadosMovimento.velocidade = velocidadeRodasConfigurada;
@@ -118,11 +120,18 @@ allButtons.forEach(btn => {
 
   btn.addEventListener('mousedown', startEvent);
   btn.addEventListener('mouseup', stopEvent);
-  btn.addEventListener('mouseleave', stopEvent); 
+  // btn.addEventListener('mouseleave', stopEvent); 
 
   btn.addEventListener('touchstart', startEvent, {passive: false});
   btn.addEventListener('touchend', stopEvent);
   btn.addEventListener('touchcancel', stopEvent);
+});
+
+document.addEventListener('mouseup', () => {
+  if ([...allButtons].some(btn => btn.classList.contains('is-active'))) {
+    pararMovimento();
+    allButtons.forEach(btn => btn.classList.remove('is-active'));
+  }
 });
 
 // ---------- EVENTOS DE TECLADO ----------
@@ -143,8 +152,8 @@ document.addEventListener('keydown', (event) => {
   // Aceita comandos do garfo APENAS no Modo 3
   else if (dadosMovimento.modo === 3) {
     switch(event.key) {
-      case 'q': dir = 'fork-up'; break;
-      case 'e': dir = 'fork-down'; break;
+      case 'ArrowUp': case 'w': dir = 'up'; break;
+      case 'ArrowDown': case 's': dir = 'down'; break;
     }
   }
 
