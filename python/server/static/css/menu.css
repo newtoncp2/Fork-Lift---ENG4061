@@ -24,7 +24,7 @@ body{
 .stage{
   display:flex;
   align-items:center;
-  gap: 90px;
+  gap: 40px; /* Reduzido para agrupar melhor os elementos */
   padding: 60px;
 }
 
@@ -54,21 +54,21 @@ body{
   transition: stroke .15s ease;
 }
 
-.dbtn:hover{
+.dbtn:hover:not(:disabled){
   border-color: var(--accent);
 }
-.dbtn:hover svg{
+.dbtn:hover:not(:disabled) svg{
   stroke: var(--accent);
 }
 
-.dbtn:active,
-.dbtn.is-active{
+.dbtn:active:not(:disabled),
+.dbtn.is-active:not(:disabled){
   background: rgba(79, 209, 197, 0.12);
   border-color: var(--accent);
   transform: scale(0.94);
 }
-.dbtn:active svg,
-.dbtn.is-active svg{
+.dbtn:active:not(:disabled) svg,
+.dbtn.is-active:not(:disabled) svg{
   stroke: var(--accent);
 }
 
@@ -82,20 +82,20 @@ body{
 .dbtn.left  { left: 0;   top: 50%;  transform: translateY(-50%); }
 .dbtn.right { right: 0;  top: 50%;  transform: translateY(-50%); }
 
-/* ---------- MODO MANUAL ---------- */
-.manual-toggle{
-  align-self: flex-start;
-  margin-top: 0;
-  width: 188px;
+/* ---------- SELETOR DE MODO (3 ESTADOS) ---------- */
+.manual-toggle {
+  width: 130px;
+  height: 260px; /* Mesma altura aproximada dos sliders */
   padding: 14px 10px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 20px;
   cursor: pointer;
-  display:flex;
+  display: flex;
   flex-direction: column;
-  align-items:center;
-  gap: 6px;
+  align-items: center;
+  justify-content: center; 
+  gap: 12px;
   transition: border-color .15s ease, background .15s ease;
 }
 
@@ -109,10 +109,7 @@ body{
   font-weight: 600;
   text-transform: capitalize;
   color: var(--text);
-}
-
-.manual-toggle:hover{
-  border-color: var(--accent);
+  transition: color .15s ease;
 }
 
 .manual-toggle:focus-visible{
@@ -120,21 +117,43 @@ body{
   outline-offset: 2px;
 }
 
-/* desligado = vermelho/atenção (precisa ligar antes de usar os controles) */
-.manual-toggle[data-manual="false"] .manual-toggle-action{
-  color: #e8807a;
-}
-
-/* ligado = verde/ativo */
-.manual-toggle[data-manual="true"]{
+/* Modo 0 (Manual) = Verde/Ativo */
+.manual-toggle[data-mode="0"]{
   border-color: var(--accent);
   background: rgba(79, 209, 197, 0.10);
 }
-.manual-toggle[data-manual="true"] .manual-toggle-action{
+.manual-toggle[data-mode="0"] .manual-toggle-action{
   color: var(--accent);
 }
+.manual-toggle[data-mode="0"]:hover {
+  border-color: #38b2a6; /* Tom levemente mais escuro ao passar o mouse */
+}
 
-/* ---------- CONTROLES BLOQUEADOS (modo manual desligado) ---------- */
+/* Modo 1 (Autônomo) = Vermelho/Bloqueado */
+.manual-toggle[data-mode="1"]{
+  border-color: #e8807a;
+  background: rgba(232, 128, 122, 0.10);
+}
+.manual-toggle[data-mode="1"] .manual-toggle-action{
+  color: #e8807a;
+}
+.manual-toggle[data-mode="1"]:hover {
+  border-color: #d76a64;
+}
+
+/* Modo 3 (Garra) = Laranja/Amarelo */
+.manual-toggle[data-mode="3"]{
+  border-color: #f6ad55;
+  background: rgba(246, 173, 85, 0.10);
+}
+.manual-toggle[data-mode="3"] .manual-toggle-action{
+  color: #f6ad55;
+}
+.manual-toggle[data-mode="3"]:hover {
+  border-color: #ed9b3a;
+}
+
+/* ---------- CONTROLES BLOQUEADOS ---------- */
 .dbtn:disabled,
 .vslider:disabled{
   opacity: 0.35;
@@ -226,6 +245,7 @@ input[type="range"].vslider::-moz-range-thumb{
   text-align:center;
 }
 
+/* ---------- DIVISÓRIA ---------- */
 .vertical-divider {
   width: 2px;
   height: 280px;
@@ -234,6 +254,7 @@ input[type="range"].vslider::-moz-range-thumb{
   border-radius: 2px;
 }
 
+/* ---------- CONTROLES DO GARFO ---------- */
 .fork-dpad {
   display: flex;
   flex-direction: column;
@@ -242,26 +263,26 @@ input[type="range"].vslider::-moz-range-thumb{
 }
 
 .fork-buttons {
-  position: relative;
-  width: 78px;
-  height: 170px; /* Espaço exato para dois botões empilhados */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg); /* Fundo da cápsula */
+  border: 1px solid var(--line); /* Borda ao redor dos dois botões */
+  padding: 12px;
+  border-radius: 40px; /* Arredondamento perfeito da pílula */
 }
 
-/* Anula o translateX herdado dos botões principais */
+/* Anula o position absolute que esses botões herdaram do D-Pad principal */
 .fork-buttons .dbtn {
-  left: 0;
+  position: relative;
+  left: auto;
+  top: auto;
+  bottom: auto;
   transform: none; 
 }
 
-.fork-buttons .dbtn:active,
-.fork-buttons .dbtn.is-active {
-  transform: scale(0.94); /* Mantém o efeito de clique sem deslocar o botão */
-}
-
-.fork-buttons .fork-up {
-  top: 0;
-}
-
-.fork-buttons .fork-down {
-  bottom: 0;
+/* Mantém a animação de clique funcionando sem deslocar o botão da pílula */
+.fork-buttons .dbtn:active:not(:disabled),
+.fork-buttons .dbtn.is-active:not(:disabled) {
+  transform: scale(0.94); 
 }
