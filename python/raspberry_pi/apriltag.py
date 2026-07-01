@@ -54,8 +54,11 @@ ws_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=1)
 command_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
+# Global variables
 last_tag = 0
 SEARCH_MODE_TIMEOUT = 6.0  # seconds without tag detection before sending search mode command
+is_autonomous = False
+TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
@@ -140,14 +143,25 @@ def _vision_worker():
 
                     draw_pose(undistorted, camera_params, tag_size, pose)
 
-                    coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]]) * 100
+                    coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])
                     t = tag.pose_t.flatten()
-                    distancia = np.linalg.norm(t) * 100
+                    
+                    distancia = np.linalg.norm(t)
+                    coord_x = coords[0][0]
+                    coord_y = coords[1][0]
+                    coord_z = coords[2][0]
 
-                    # TODO: fazer lógica de controle
+                    # Controle automático baseado na posição do tag detectado
+                    if is_autonomous and tag.tag_id == TARGET_TAG_ID:
+                        coord_z += 0.1  # Ajuste de distância para frente
+                        phi = np.arctan2(coord_x, coord_z) # Ângulo de rotação em torno do eixo Y
+                        rho = np.sqrt(coord_x**2 + coord_z**2) # Distância horizontal
+
+                        command_queue.put(f"1 {rho},{phi}")
+
                     coord_str = (
-                        f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
-                        f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
+                        f"id:{tag.tag_id},x:{coord_x},y:{coord_y},"
+                        f"z:{coord_z},pitch:{pitch},distancia:{distancia}"
                     )
                     logger.debug(coord_str)
                     
