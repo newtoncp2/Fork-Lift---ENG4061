@@ -4,42 +4,64 @@
         <meta charset="utf-8"/> 
         <title>Menu</title> 
 
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/menu.css') }}">
-        <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../static/css/menu.css">
+        <link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     </head>
 <body>
     <div class="stage">
 
         <div class="dpad">
-    <button class="dbtn up" data-dir="up" aria-label="Mover para cima" disabled>
-      <svg width="28" height="28" viewBox="0 0 28 28"><path d="M7 17 L14 9 L21 17" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <button class="dbtn left" data-dir="left" aria-label="Mover para esquerda" disabled>
-      <svg width="28" height="28" viewBox="0 0 28 28"><path d="M17 7 L9 14 L17 21" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <button class="dbtn right" data-dir="right" aria-label="Mover para direita" disabled>
-      <svg width="28" height="28" viewBox="0 0 28 28"><path d="M11 7 L19 14 L11 21" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <button class="dbtn down" data-dir="down" aria-label="Mover para baixo" disabled>
-      <svg width="28" height="28" viewBox="0 0 28 28"><path d="M7 11 L14 19 L21 11" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </div>
+            <button class="dbtn up" data-dir="up" aria-label="Mover para cima" disabled>
+                <svg width="28" height="28" viewBox="0 0 28 28"><path d="M7 17 L14 9 L21 17" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="dbtn left" data-dir="left" aria-label="Mover para esquerda" disabled>
+                <svg width="28" height="28" viewBox="0 0 28 28"><path d="M17 7 L9 14 L17 21" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="dbtn right" data-dir="right" aria-label="Mover para direita" disabled>
+                <svg width="28" height="28" viewBox="0 0 28 28"><path d="M11 7 L19 14 L11 21" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="dbtn down" data-dir="down" aria-label="Mover para baixo" disabled>
+                <svg width="28" height="28" viewBox="0 0 28 28"><path d="M7 11 L14 19 L21 11" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </div>
 
-  <button class="manual-toggle" id="manualToggle" data-manual="false" aria-pressed="false">
-    <span class="manual-toggle-title">Modo manual</span>
-    <span class="manual-toggle-action" id="manualToggleAction">ligar</span>
-  </button>
+        <button class="manual-toggle" id="manualToggle" data-manual="false" aria-pressed="false">
+            <span class="manual-toggle-title">Modo manual</span>
+            <span class="manual-toggle-action" id="manualToggleAction">ligar</span>
+        </button>
 
-  <div class="speed-block">
-    <div class="speed-label">Velocidade:</div>
-    <div class="speed-track-wrap">
-      <input class="vslider" type="range" min="0" max="100" value="0" id="speed" aria-label="Velocidade" disabled>
+        <div class="speed-block">
+            <div class="speed-label">Velocidade</div>
+            <div class="speed-track-wrap">
+                <input class="vslider" type="range" min="0" max="100" value="0" id="speed" aria-label="Velocidade" disabled>
+            </div>
+            <div class="speed-value" id="speedValue">0</div>
+        </div>
+
+        <div class="vertical-divider"></div>
+
+        <div class="fork-dpad">
+            <div class="speed-label">Garfo</div>
+            <div class="fork-buttons">
+                <button class="dbtn fork-up" data-dir="fork-up" aria-label="Subir garfo" disabled>
+                    <svg width="28" height="28" viewBox="0 0 28 28"><path d="M7 17 L14 9 L21 17" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="dbtn fork-down" data-dir="fork-down" aria-label="Descer garfo" disabled>
+                    <svg width="28" height="28" viewBox="0 0 28 28"><path d="M7 11 L14 19 L21 11" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="speed-block">
+            <div class="speed-label">Vel. Garfo</div>
+            <div class="speed-track-wrap">
+                <input class="vslider" type="range" min="0" max="100" value="0" id="forkSpeed" aria-label="Velocidade do garfo" disabled>
+            </div>
+            <div class="speed-value" id="forkSpeedValue">0</div>
+        </div>
+
     </div>
-    <div class="speed-value" id="speedValue">0</div>
-  </div>
-    </div>
 
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+    <script src="../static/js/menu.js"></script>
 </body>
 </html>
-

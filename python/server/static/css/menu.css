@@ -225,3 +225,43 @@ input[type="range"].vslider::-moz-range-thumb{
   min-width: 3ch;
   text-align:center;
 }
+
+.vertical-divider {
+  width: 2px;
+  height: 280px;
+  background-color: var(--line);
+  margin: 0 10px;
+  border-radius: 2px;
+}
+
+.fork-dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.fork-buttons {
+  position: relative;
+  width: 78px;
+  height: 170px; /* Espaço exato para dois botões empilhados */
+}
+
+/* Anula o translateX herdado dos botões principais */
+.fork-buttons .dbtn {
+  left: 0;
+  transform: none; 
+}
+
+.fork-buttons .dbtn:active,
+.fork-buttons .dbtn.is-active {
+  transform: scale(0.94); /* Mantém o efeito de clique sem deslocar o botão */
+}
+
+.fork-buttons .fork-up {
+  top: 0;
+}
+
+.fork-buttons .fork-down {
+  bottom: 0;
+}
