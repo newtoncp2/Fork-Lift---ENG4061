@@ -1,68 +1,67 @@
 console.log("JS carregado!");
 
-// Modos: 0 = Manual (dpad + velocidade), 1 = Autônomo (tudo travado), 3 = Garra (fork-dpad + velocidade)
+// Objeto que vai para o MQTT
 let dadosMovimento = {
-  modo: 0,
-  direcao: "",
+  modo: 0, 
+  direcao: "",        
   velocidade: 0
 };
+
+// Armazenam as velocidades configuradas nos sliders
+let velocidadeRodasConfigurada = 0;
+let velocidadeGarfoConfigurada = 0;
+
+// Evita milhares de comandos se segurar a tecla
+let teclaPressionada = null; 
 
 // Referências
 const modeToggle = document.getElementById('modeToggle');
 const modeToggleAction = document.getElementById('modeToggleAction');
-const dpadButtons = document.querySelectorAll('.dbtn');
 const speedInput = document.getElementById('speed');
 const speedValue = document.getElementById('speedValue');
 const forkSpeedInput = document.getElementById('forkSpeed');
 const forkSpeedValue = document.getElementById('forkSpeedValue');
 
-// Botões do dpad principal (movimento) e do garfo, separados
-const moveButtons = document.querySelectorAll('.dpad .dbtn');
+// Separa os botões para podermos travar/destravar independentemente
+const wheelButtons = document.querySelectorAll('.dpad > .dbtn'); 
 const forkButtons = document.querySelectorAll('.fork-buttons .dbtn');
+const allButtons = document.querySelectorAll('.dbtn'); // Usado para escutar os cliques
 
-// Função que aplica as regras de cada modo
+// ---------- CONTROLE DE MODOS ----------
 function setMode(newMode) {
   dadosMovimento.modo = newMode;
   modeToggle.dataset.mode = newMode;
 
-  let moveEnabled = false;
-  let forkEnabled = false;
-
-  if (newMode === 0) {
+  if (newMode === 0) { // MANUAL: Locomoção
     modeToggleAction.textContent = "Manual";
-    moveEnabled = true;
-  } else if (newMode === 1) {
+    
+    // Destrava Rodas
+    wheelButtons.forEach(btn => btn.disabled = false);
+    speedInput.disabled = false;
+    // Trava Garfo
+    forkButtons.forEach(btn => btn.disabled = true);
+    forkSpeedInput.disabled = true;
+    
+  } else if (newMode === 1) { // AUTÔNOMO: Tudo travado
     modeToggleAction.textContent = "Autônomo";
-    // tudo travado
-  } else if (newMode === 3) {
+    
+    wheelButtons.forEach(btn => btn.disabled = true);
+    speedInput.disabled = true;
+    forkButtons.forEach(btn => btn.disabled = true);
+    forkSpeedInput.disabled = true;
+    
+  } else if (newMode === 3) { // GARRA: Foco no Garfo
     modeToggleAction.textContent = "Garra";
-    forkEnabled = true;
+    
+    // Trava Rodas 
+    wheelButtons.forEach(btn => btn.disabled = true);
+    speedInput.disabled = true;
+    // Destrava Garfo
+    forkButtons.forEach(btn => btn.disabled = false);
+    forkSpeedInput.disabled = false;
   }
-
-  // Habilita/desabilita cada conjunto de controles de acordo com o modo
-  moveButtons.forEach(btn => btn.disabled = !moveEnabled);
-  forkButtons.forEach(btn => btn.disabled = !forkEnabled);
-  speedInput.disabled = !moveEnabled;
-  forkSpeedInput.disabled = !forkEnabled;
-
-  // Zera o slider e o valor exibido do controle que ficou desabilitado,
-  // para não carregar um valor "fantasma" de um modo anterior
-  if (!moveEnabled) {
-    speedInput.value = 0;
-    speedValue.textContent = "0";
-  }
-  if (!forkEnabled) {
-    forkSpeedInput.value = 0;
-    forkSpeedValue.textContent = "0";
-  }
-
-  // Como trocamos de modo, a velocidade e a direção antigas não fazem
-  // mais sentido para o novo contexto
-  dadosMovimento.velocidade = 0;
-  dadosMovimento.direcao = "";
 }
 
-// Lógica de ciclo de modos no clique
 modeToggle.addEventListener('click', () => {
   let currentMode = dadosMovimento.modo;
   let nextMode;
@@ -76,90 +75,118 @@ modeToggle.addEventListener('click', () => {
   enviaDados();
 });
 
-// Inicializa a tela no estado correto
-setMode(0);
+setMode(0); // Inicializa no modo manual
 
-document.addEventListener('keydown', (event) => {
-  const modo = dadosMovimento.modo;
+// ---------- LÓGICA DE MOVIMENTO (INICIAR E PARAR) ----------
 
-  // Autônomo: teclado não faz nada
-  if (modo === 1) return;
-
-  switch (event.key) {
-    case 'ArrowUp':
-    case 'w':
-      if (modo !== 0) return; // só no modo Manual
-      dadosMovimento.direcao = 'up';
-      break;
-    case 'ArrowDown':
-    case 's':
-      if (modo !== 0) return;
-      dadosMovimento.direcao = 'down';
-      break;
-    case 'ArrowLeft':
-    case 'a':
-      if (modo !== 0) return;
-      dadosMovimento.direcao = 'left';
-      break;
-    case 'ArrowRight':
-    case 'd':
-      if (modo !== 0) return;
-      dadosMovimento.direcao = 'right';
-      break;
-    case 'q':
-      if (modo !== 3) return; // só no modo Garra
-      dadosMovimento.direcao = 'fork-up';
-      break;
-    case 'e':
-      if (modo !== 3) return;
-      dadosMovimento.direcao = 'fork-down';
-      break;
-    default:
-      return;
+function iniciarMovimento(direcao) {
+  dadosMovimento.direcao = direcao;
+  
+  if (direcao.startsWith('fork-')) {
+    dadosMovimento.velocidade = velocidadeGarfoConfigurada;
+  } else {
+    dadosMovimento.velocidade = velocidadeRodasConfigurada;
   }
+  
+  console.log(`Iniciando movimento: ${direcao} a ${dadosMovimento.velocidade}%`);
   enviaDados();
+}
+
+function pararMovimento() {
+  dadosMovimento.velocidade = 0; 
+  console.log('Parando movimento (velocidade 0)');
+  enviaDados();
+}
+
+// ---------- EVENTOS DE MOUSE E TOUCH (TELA) ----------
+allButtons.forEach(btn => {
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+
+  const startEvent = (e) => {
+    e.preventDefault(); 
+    if(btn.disabled) return;
+    iniciarMovimento(btn.dataset.dir);
+    btn.classList.add('is-active'); 
+  };
+
+  const stopEvent = (e) => {
+    e.preventDefault();
+    if(btn.disabled) return;
+    pararMovimento();
+    btn.classList.remove('is-active'); 
+  };
+
+  btn.addEventListener('mousedown', startEvent);
+  btn.addEventListener('mouseup', stopEvent);
+  btn.addEventListener('mouseleave', stopEvent); 
+
+  btn.addEventListener('touchstart', startEvent, {passive: false});
+  btn.addEventListener('touchend', stopEvent);
+  btn.addEventListener('touchcancel', stopEvent);
 });
 
-// Cliques nos botões do dpad (movimento) e do garfo
-dpadButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    dadosMovimento.direcao = btn.dataset.dir;
-    console.log('Direção pressionada:', dadosMovimento.direcao);
-    enviaDados();
-  });
+// ---------- EVENTOS DE TECLADO ----------
+document.addEventListener('keydown', (event) => {
+  if (event.repeat) return; 
+
+  let dir = "";
+  
+  // Aceita comandos das rodas APENAS no Modo 0
+  if (dadosMovimento.modo === 0) {
+    switch(event.key) {
+      case 'ArrowUp': case 'w': dir = 'up'; break;
+      case 'ArrowDown': case 's': dir = 'down'; break;
+      case 'ArrowLeft': case 'a': dir = 'left'; break;
+      case 'ArrowRight': case 'd': dir = 'right'; break;
+    }
+  } 
+  // Aceita comandos do garfo APENAS no Modo 3
+  else if (dadosMovimento.modo === 3) {
+    switch(event.key) {
+      case 'q': dir = 'fork-up'; break;
+      case 'e': dir = 'fork-down'; break;
+    }
+  }
+
+  // Se uma tecla válida para o modo atual foi pressionada
+  if (dir !== "") {
+    teclaPressionada = event.key;
+    iniciarMovimento(dir);
+  }
 });
 
-// Slider de velocidade das rodas — só atualiza dadosMovimento no modo Manual
+document.addEventListener('keyup', (event) => {
+  if (event.key === teclaPressionada) {
+    teclaPressionada = null;
+    pararMovimento();
+  }
+});
+
+// ---------- SLIDERS DE VELOCIDADE ----------
 speedInput.addEventListener('input', () => {
   speedValue.textContent = speedInput.value;
-  if (dadosMovimento.modo !== 0) return;
-  dadosMovimento.velocidade = parseInt(speedInput.value);
-  console.log('Velocidade das Rodas:', speedInput.value);
-  enviaDados();
+  velocidadeRodasConfigurada = parseInt(speedInput.value); 
 });
 
-// Slider de velocidade do garfo — só atualiza dadosMovimento no modo Garra
 forkSpeedInput.addEventListener('input', () => {
   forkSpeedValue.textContent = forkSpeedInput.value;
-  if (dadosMovimento.modo !== 3) return;
-  dadosMovimento.velocidade = parseInt(forkSpeedInput.value);
-  console.log('Velocidade do Garfo:', forkSpeedInput.value);
-  enviaDados();
+  velocidadeGarfoConfigurada = parseInt(forkSpeedInput.value); 
 });
 
+// ---------- ENVIO PARA O SERVIDOR ----------
 function enviaDados() {
   fetch('/', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
     },
     body: JSON.stringify(dadosMovimento)
   })
-    .then(response => response.json())
-    .then(data => {
+  .then(response => response.json())
+  .then(data => {
       console.log('Sucesso:', data);
-    })
-    .catch(error => {
+  })
+  .catch(error => {
       console.error('Erro:', error);
-    });
+  });
 }
