@@ -59,6 +59,8 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
+busca = [f"1 {np.pi/4}", f"1 -{np.pi/2}", f"1 {np.pi/4}", "2 0.9"]
+etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 4
 cont = 0
@@ -107,7 +109,7 @@ def _capture_worker():
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
-    global last_tag, modo, ler_tag, cont, x0, z0, z_lin, kx, kz
+    global last_tag, modo, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -212,8 +214,14 @@ def _vision_worker():
                             )
                             logger.debug(coord_str)
                             '''
-                else:
-                    pass
+                elif modo == 4:
+                    comando = f"{modo} {busca[etapa_busca]}"
+                    etapa_busca += 1
+                    if etapa_busca >= 3:
+                        etapa_busca = 0
+                    
+                    command_queue.put(comando)
+                    ler_tag = False 
                     # implementar modo de busca aqui
             else:
                 try:
@@ -221,7 +229,7 @@ def _vision_worker():
                 except queue.Empty:
                     msg = ""
                 
-                if msg == "fim modo " + str(modo):
+                if msg == "fim modo " + str(modo): 
                     ler_tag = True
 
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
