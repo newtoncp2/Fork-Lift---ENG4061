@@ -133,7 +133,7 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if ler_tag and config.is_autonomous:
+            if ler_tag or config.is_autonomous: #mudar pra and!!
                 logger.debug("cade tag");
                 tags = at_detector.detect(
                     gray,
