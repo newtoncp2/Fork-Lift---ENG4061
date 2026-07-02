@@ -17,6 +17,8 @@ let teclaPressionada = null;
 // Referências
 const modeToggle = document.getElementById('modeToggle');
 const modeToggleAction = document.getElementById('modeToggleAction');
+const autoToggle = document.getElementById('autoToggle'); // NOVA REFERÊNCIA
+const autoToggleAction = document.getElementById('autoToggleAction'); // NOVA REFERÊNCIA
 const speedInput = document.getElementById('speed');
 const speedValue = document.getElementById('speedValue');
 const forkSpeedInput = document.getElementById('forkSpeed');
@@ -28,12 +30,16 @@ const forkButtons = document.querySelectorAll('.fork-buttons .dbtn');
 const allButtons = document.querySelectorAll('.dbtn'); // Usado para escutar os cliques
 
 // ---------- CONTROLE DE MODOS ----------
+let modoManualAtual = 0; // Armazena se o estado base é 0 (Manual) ou 3 (Garra)
+
 function setMode(newMode) {
   dadosMovimento.modo = newMode;
   modeToggle.dataset.mode = newMode;
 
   if (newMode === 0) { // MANUAL: Locomoção
     modeToggleAction.textContent = "Manual";
+    autoToggleAction.textContent = "Desligado";
+    autoToggleAction.style.color = "#f44336"; // Vermelho
 
     // Destrava Rodas
     wheelButtons.forEach(btn => btn.disabled = false);
@@ -43,8 +49,10 @@ function setMode(newMode) {
     forkSpeedInput.disabled = true;
 
   } else if (newMode === 1) { // AUTÔNOMO: Tudo travado
-    modeToggleAction.textContent = "Autônomo";
+    autoToggleAction.textContent = "Ligado";
+    autoToggleAction.style.color = "#4CAF50"; // Verde
 
+    // Trava Rodas e Garfo
     wheelButtons.forEach(btn => btn.disabled = true);
     speedInput.disabled = true;
     forkButtons.forEach(btn => btn.disabled = true);
@@ -52,6 +60,8 @@ function setMode(newMode) {
 
   } else if (newMode === 3) { // GARRA: Foco no Garfo
     modeToggleAction.textContent = "Garra";
+    autoToggleAction.textContent = "Desligado";
+    autoToggleAction.style.color = "#f44336"; // Vermelho
 
     // Trava Rodas 
     wheelButtons.forEach(btn => btn.disabled = true);
@@ -62,14 +72,30 @@ function setMode(newMode) {
   }
 }
 
+// Botão para alternar entre Manual (Rodas) e Garra
 modeToggle.addEventListener('click', () => {
-  let currentMode = dadosMovimento.modo;
+  // Alterna o modo base entre 0 e 3
+  modoManualAtual = (modoManualAtual === 0) ? 3 : 0;
+  dadosMovimento.direcao = "up"; // Define a direção como "up" ao mudar de modo
+
+  // Aplica o novo modo manual/garra e força o desligamento do autônomo (se estivesse ligado)
+  setMode(modoManualAtual);
+  console.log('Modo alterado para:', modoManualAtual);
+  enviaDados();
+});
+
+// Botão exclusivo para ligar/desligar o modo Autônomo
+autoToggle.addEventListener('click', () => {
   let nextMode;
   dadosMovimento.direcao = "up"; // Define a direção como "up" ao mudar de modo
 
-  if (currentMode === 0) nextMode = 1;
-  else if (currentMode === 1) nextMode = 3;
-  else if (currentMode === 3) nextMode = 0;
+  if (dadosMovimento.modo === 1) {
+    // Se estava autônomo, desliga e volta para o modo que estava selecionado antes (Manual ou Garra)
+    nextMode = modoManualAtual;
+  } else {
+    // Se não estava autônomo, liga
+    nextMode = 1;
+  }
 
   setMode(nextMode);
   console.log('Modo alterado para:', nextMode);
@@ -119,7 +145,6 @@ allButtons.forEach(btn => {
 
   btn.addEventListener('mousedown', startEvent);
   btn.addEventListener('mouseup', stopEvent);
-  // btn.addEventListener('mouseleave', stopEvent); 
 
   btn.addEventListener('touchstart', startEvent, { passive: false });
   btn.addEventListener('touchend', stopEvent);
