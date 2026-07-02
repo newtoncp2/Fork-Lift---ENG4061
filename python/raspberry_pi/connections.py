@@ -123,7 +123,6 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
         while not stop_event.is_set():
             if serial_port is None:
                 logger.debug("Serial port not available, skipping read")
-                response_queue.task_done()
                 continue
 
             try:
