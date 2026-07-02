@@ -144,7 +144,7 @@ def _vision_worker():
                     for idx, tag in enumerate(tags):
                         if idx == TARGET_TAG_ID:
                             last_tag = time.time()
-                            process_image(undistorted, tag, idx)
+                            process_image(undistorted, tag)
 
                             x0 += tag.pose_t[0][0]
                             z0 += tag.pose_t[2][0]
@@ -170,17 +170,13 @@ def _vision_worker():
                                     alvo = theta_ef
                                 elif modo == 1:
                                     modo = 2
-                                    if abs(rho_lin) < 0.07:  rho_lin = 0;
-                                    
                                     alvo = rho_lin
-                                    
                                     if abs(theta_ef) > 0.1: # AJUSTAR ESSE '0.1' ALEATÓRIO
                                         modo = 1
                                         alvo = theta_ef
                                     elif abs(theta_volta) > 0.1:
                                         modo = 1
                                         alvo = theta_volta
-                                    
                                 elif modo == 2: 
                                     modo = 1
                                     alvo = theta_volta
@@ -214,7 +210,7 @@ def _vision_worker():
                             '''
                 else:
                     pass
-                    # implementar modo de busca aqui
+                    # implementar modo de busca aqu
 
                 ret, encoded_frame = cv2.imencode('.jpg', undistorted)
                 if ret:
