@@ -123,7 +123,6 @@ def _vision_worker():
     while not stop_event.is_set():        
         # Get the latest frame from the queue, if available
         
-        
         try:
             frame = frame_queue.get(timeout=0.2)
         except queue.Empty:
@@ -213,15 +212,19 @@ def _vision_worker():
                 else:
                     pass
                     # implementar modo de busca aqui
-
+            
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
                 _put_latest(ws_queue, encoded_frame.tobytes())
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
-        
+
         else:
-            msg = response_queue.get(timeout=0.2)
+            try:
+                msg = response_queue.get(timeout=0.2)
+            except queue.Empty:
+                msg = ""
+            
             if msg == "fim modo " + str(modo):
                 ler_tag = True
 
