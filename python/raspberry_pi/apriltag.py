@@ -59,7 +59,9 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
+x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 4
+cont = 0
 ler_tag = False
 last_tag = 0
 SEARCH_MODE_TIMEOUT = 3.0  # seconds without tag detection before sending search mode command
@@ -105,7 +107,7 @@ def _capture_worker():
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
-    global last_tag, modo, ler_tag
+    global last_tag, modo, ler_tag, cont, x0, z0, z_lin, kx, kz
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -144,39 +146,46 @@ def _vision_worker():
                             last_tag = time.time()
                             process_image(undistorted, tag, idx)
 
-                            x0 = tag.pose_t[0][0]
-                            z0 = tag.pose_t[2][0]
+                            x0 += tag.pose_t[0][0]
+                            z0 += tag.pose_t[2][0]
                             
-                            z_lin = z0 - 0.15
+                            z_lin += z0 - 0.15
 
-                            rho_lin = np.sqrt(x0**2 + z_lin**2)
+                            kx += tag.pose_R[2, 0]
+                            kz += tag.pose_R[2, 2]
 
-                            theta_lin = np.arctan2(z_lin, x0)
+                            if cont >= 5:
+                                x0 /= 5; z0 /= 5; z_lin /= 5; kx /= 5; kz /= 5
+                                    
+                                cont = 0
 
-                            kx = tag.pose_R[2, 0]
-                            kz = tag.pose_R[2, 2]
-
-                            theta_k = np.arctan2(kz, kx)
-
-                            theta_ef = theta_k - theta_lin 
-                            theta_volta = -(np.pi/2 - theta_k)
-
-                            if modo == 4:
-                                modo = 1 
-                                alvo = theta_ef
-                            elif modo == 1:
-                                modo = 2
-                                alvo = rho_lin
-                                if abs(theta_ef) > 0.1: # AJUSTAR ESSE '0.1' ALEATÓRIO
-                                    modo = 1
+                                rho_lin = np.sqrt(x0**2 + z_lin**2)
+                                theta_lin = np.arctan2(z_lin, x0)
+                                theta_k = np.arctan2(kz, kx)    
+                                theta_ef = theta_k - theta_lin 
+                                theta_volta = -(np.pi/2 - theta_k)
+                                
+                                if modo == 4:
+                                    modo = 1 
                                     alvo = theta_ef
-                            elif modo == 2: 
-                                modo = 1
-                                alvo = theta_volta
-                            
-                            comando = f"{modo} {alvo}"
-                            command_queue.put(comando)
-                            ler_tag = False
+                                elif modo == 1:
+                                    modo = 2
+                                    alvo = rho_lin
+                                    if abs(theta_ef) > 0.1: # AJUSTAR ESSE '0.1' ALEATÓRIO
+                                        modo = 1
+                                        alvo = theta_ef
+                                    elif abs(theta_volta) > 0.1:
+                                        modo = 1
+                                        alvo = theta_volta
+                                elif modo == 2: 
+                                    modo = 1
+                                    alvo = theta_volta
+
+                                comando = f"{modo} {alvo}"
+                                command_queue.put(comando)
+                                ler_tag = False
+                            else:
+                                cont += 1
                             '''
                             pose = np.eye(4)
                             pose[:3, :3] = tag.pose_R
