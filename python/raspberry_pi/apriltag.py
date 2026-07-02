@@ -59,7 +59,7 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
-modo = 1
+modo = 4
 ler_tag = False
 last_tag = 0
 SEARCH_MODE_TIMEOUT = 3.0  # seconds without tag detection before sending search mode command
