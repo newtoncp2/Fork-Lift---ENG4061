@@ -65,6 +65,7 @@ function setMode(newMode) {
 modeToggle.addEventListener('click', () => {
   let currentMode = dadosMovimento.modo;
   let nextMode;
+  dadosMovimento.direcao = "up"; // Define a direção como "up" ao mudar de modo
 
   if (currentMode === 0) nextMode = 1;
   else if (currentMode === 1) nextMode = 3;
@@ -72,9 +73,7 @@ modeToggle.addEventListener('click', () => {
 
   setMode(nextMode);
   console.log('Modo alterado para:', nextMode);
-  if (nextMode === 1) { // Se for modo autônomo, envia imediatamente
-    enviaDados();
-  }
+  enviaDados();
 });
 
 setMode(0); // Inicializa no modo manual
