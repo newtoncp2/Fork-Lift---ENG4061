@@ -212,21 +212,22 @@ def _vision_worker():
                 else:
                     pass
                     # implementar modo de busca aqui
-            
+            else:
+                try:
+                    msg = response_queue.get(timeout=0.2)
+                except queue.Empty:
+                    msg = ""
+                
+                if msg == "fim modo " + str(modo):
+                    ler_tag = True
+
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
                 _put_latest(ws_queue, encoded_frame.tobytes())
+            
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
 
-        else:
-            try:
-                msg = response_queue.get(timeout=0.2)
-            except queue.Empty:
-                msg = ""
-            
-            if msg == "fim modo " + str(modo):
-                ler_tag = True
 
         if time.time() - last_tag > SEARCH_MODE_TIMEOUT:
             ler_tag = True
