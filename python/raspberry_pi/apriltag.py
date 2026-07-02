@@ -5,6 +5,7 @@ import asyncio
 import queue
 import threading
 import time
+from .config import config
 from .setup import setup_resources
 from .connections import (
     create_and_start_mqtt,
@@ -57,7 +58,6 @@ stop_event = threading.Event()
 # Global variables
 last_tag = 0
 SEARCH_MODE_TIMEOUT = 6.0  # seconds without tag detection before sending search mode command
-is_autonomous = False
 TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
 
 logger.info("starting mqtt...")
@@ -152,7 +152,7 @@ def _vision_worker():
                     coord_z = coords[2][0]
 
                     # Controle automático baseado na posição do tag detectado
-                    if is_autonomous and tag.tag_id == TARGET_TAG_ID:
+                    if config.is_autonomous and tag.tag_id == TARGET_TAG_ID:
                         coord_z += 0.1  # Ajuste de distância para frente
                         phi = np.arctan2(coord_x, coord_z) # Ângulo de rotação em torno do eixo Y
                         rho = np.sqrt(coord_x**2 + coord_z**2) # Distância horizontal

@@ -14,6 +14,7 @@ import json
 import queue
 import threading
 import logging
+from .config import config
 from typing import Iterable, Optional
 
 logger = logging.getLogger(__name__)
@@ -185,6 +186,7 @@ def make_on_message(serial_port: Optional[object] = None):
     """
     def _to_serial_command(modo: Optional[str], direction: Optional[str], velocidade: int) -> Optional[str]:
         if modo == 0:
+            config.is_autonomous = False
             if direction == "up":
                 return f"0 {velocidade},{velocidade}"
             if direction == "down":
@@ -195,8 +197,10 @@ def make_on_message(serial_port: Optional[object] = None):
                 return f"0 {velocidade},{-velocidade}"
             return None
         if modo == 1:
+            config.is_autonomous = True
             return "1"
         if modo == 3:
+            config.is_autonomous = False
             if direction == "up":
                 return f"3 {velocidade}"
             if direction == "down":
