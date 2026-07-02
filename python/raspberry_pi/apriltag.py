@@ -157,16 +157,16 @@ def _vision_worker():
                             kx += tag.pose_R[2, 0]
                             kz += tag.pose_R[2, 2]
 
-                            if cont >= 5:
+                            if cont >= 2:
                                 x0 /= 5; z0 /= 5; z_lin /= 5; kx /= 5; kz /= 5
                                 
                                 cont = 0
 
                                 rho_lin = np.sqrt(x0**2 + z_lin**2)
-                                theta_lin = np.arctan2(z_lin, x0)
-                                theta_k = np.arctan2(kz, kx)    
-                                theta_ef = theta_k - theta_lin 
-                                theta_volta = -(np.pi/2 - theta_k)
+                                theta_lin = np.arctan2(z_lin, x0)  
+                                theta_k = np.arctan2(kz, kx)       
+                                theta_ef = theta_k - theta_lin     
+                                theta_volta = -(np.pi/2 - theta_k) 
                                 
                                 if modo == 4:
                                     modo = 1 
