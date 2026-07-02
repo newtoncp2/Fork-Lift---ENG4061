@@ -123,16 +123,18 @@ def _vision_worker():
     while not stop_event.is_set():        
         # Get the latest frame from the queue, if available
         
-        if ler_tag:
-            try:
-                frame = frame_queue.get(timeout=0.2)
-            except queue.Empty:
-                continue
-            
-            try:
-                undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
-                gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
+        
+        try:
+            frame = frame_queue.get(timeout=0.2)
+        except queue.Empty:
+            continue
+        
+        
+        try:
+            undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
+            gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
+            if ler_tag:
                 tags = at_detector.detect(
                     gray,
                     estimate_tag_pose=True,
@@ -141,8 +143,8 @@ def _vision_worker():
                 )
 
                 if tags:
-                    for idx, tag in enumerate(tags):
-                        if idx == TARGET_TAG_ID:
+                    for tag in tags:
+                        if tag.tag_id == TARGET_TAG_ID:
                             last_tag = time.time()
                             process_image(undistorted, tag)
 
@@ -212,12 +214,12 @@ def _vision_worker():
                     pass
                     # implementar modo de busca aqu
 
-                ret, encoded_frame = cv2.imencode('.jpg', undistorted)
-                if ret:
-                    _put_latest(ws_queue, encoded_frame.tobytes())
-            except Exception as e:
-                logger.debug(f"Vision processing error: {e}")
-        
+            ret, encoded_frame = cv2.imencode('.jpg', undistorted)
+            if ret:
+                _put_latest(ws_queue, encoded_frame.tobytes())
+        except Exception as e:
+            logger.debug(f"Vision processing error: {e}")
+         
         else:
             msg = response_queue.get(timeout=0.2)
             if msg == "fim modo " + str(modo):

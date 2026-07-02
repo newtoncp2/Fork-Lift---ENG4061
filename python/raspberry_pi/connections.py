@@ -133,8 +133,7 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
             except Exception as e:
                 logger.debug(f"Serial reader error: {e}")
             finally:
-                pass
-                #response_queue.task_done()
+                response_queue.task_done()
 
     thread = threading.Thread(target=_worker, name="serial-reader", daemon=True)
     thread.start()
