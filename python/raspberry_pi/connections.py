@@ -145,7 +145,8 @@ def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_eve
                 cmd = command_queue.get(timeout=0.2)
             except queue.Empty:
                 continue
-
+            
+            print(f"Sending command to Arduino: {cmd}")
             if serial_port is None:
                 logger.debug(f"Serial port not available, discarding command: {cmd}")
                 continue

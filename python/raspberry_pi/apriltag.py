@@ -158,7 +158,7 @@ def _vision_worker():
 
                             if cont >= 5:
                                 x0 /= 5; z0 /= 5; z_lin /= 5; kx /= 5; kz /= 5
-                                    
+                                
                                 cont = 0
 
                                 rho_lin = np.sqrt(x0**2 + z_lin**2)
