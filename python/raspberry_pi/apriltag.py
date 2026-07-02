@@ -141,7 +141,7 @@ def _vision_worker():
                     camera_params=camera_params,
                     tag_size=tag_size,
                 )
-                
+
                 if tags:
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
@@ -212,14 +212,14 @@ def _vision_worker():
                             '''
                 else:
                     pass
-                    # implementar modo de busca aqu
+                    # implementar modo de busca aqui
 
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
                 _put_latest(ws_queue, encoded_frame.tobytes())
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
-         
+        
         else:
             msg = response_queue.get(timeout=0.2)
             if msg == "fim modo " + str(modo):

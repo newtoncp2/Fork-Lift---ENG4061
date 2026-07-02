@@ -124,7 +124,7 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
             if serial_port is None:
                 logger.debug("Serial port not available, skipping read")
                 continue
-
+            
             try:
                 line = serial_port.readline().decode().strip()
                 if line:
@@ -132,8 +132,6 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
                     logger.debug(f"Arduino: {line}")
             except Exception as e:
                 logger.debug(f"Serial reader error: {e}")
-            finally:
-                response_queue.task_done()
 
     thread = threading.Thread(target=_worker, name="serial-reader", daemon=True)
     thread.start()
