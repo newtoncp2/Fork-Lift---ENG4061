@@ -134,6 +134,7 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if ler_tag and config.is_autonomous:
+                print("cade tag");
                 tags = at_detector.detect(
                     gray,
                     estimate_tag_pose=True,
@@ -142,8 +143,11 @@ def _vision_worker():
                 )
 
                 if tags:
+                    print("vi tag");
+
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
+                            print("minha tag!");
                             last_tag = time.time()
                             process_image(undistorted, tag)
 
