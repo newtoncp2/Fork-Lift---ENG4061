@@ -134,14 +134,14 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if ler_tag:
+            if ler_tag and config.is_autonomous:
                 tags = at_detector.detect(
                     gray,
                     estimate_tag_pose=True,
                     camera_params=camera_params,
                     tag_size=tag_size,
                 )
-
+                
                 if tags:
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
