@@ -134,7 +134,6 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if ler_tag or config.is_autonomous: #mudar pra and!!
-                logger.debug("cade tag");
                 tags = at_detector.detect(
                     gray,
                     estimate_tag_pose=True,
@@ -143,16 +142,15 @@ def _vision_worker():
                 )
 
                 if tags:
-                    logger.debug("vi tag");
-
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
-                            logger.debug("minha tag!");
                             last_tag = time.time()
                             process_image(undistorted, tag)
 
-                            x0 += tag.pose_t[0][0]
-                            z0 += tag.pose_t[2][0]
+                            t = tag.pose_t.flatten()
+
+                            x0 += t[0]
+                            z0 += t[2]
                             
                             z_lin += z0 - 0.15
 
@@ -165,7 +163,7 @@ def _vision_worker():
                                 cont = 0
 
                                 rho_lin = np.sqrt(x0**2 + z_lin**2)
-                                theta_lin = np.arctan2(z_lin, x0)
+                                theta_lin = np.arctan2(x0, z_lin)
                                 theta_k = np.arctan2(kz, kx)    
                                 theta_ef = theta_k - theta_lin 
                                 theta_volta = -(np.pi/2 - theta_k)
@@ -191,6 +189,7 @@ def _vision_worker():
                                 ler_tag = False
                             else:
                                 cont += 1
+
                             '''
                             pose = np.eye(4)
                             pose[:3, :3] = tag.pose_R
