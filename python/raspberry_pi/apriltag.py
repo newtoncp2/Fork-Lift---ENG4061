@@ -170,13 +170,17 @@ def _vision_worker():
                                     alvo = theta_ef
                                 elif modo == 1:
                                     modo = 2
+                                    if abs(rho_lin) < 0.07:  rho_lin = 0;
+                                    
                                     alvo = rho_lin
+                                    
                                     if abs(theta_ef) > 0.1: # AJUSTAR ESSE '0.1' ALEATÓRIO
                                         modo = 1
                                         alvo = theta_ef
                                     elif abs(theta_volta) > 0.1:
                                         modo = 1
                                         alvo = theta_volta
+                                    
                                 elif modo == 2: 
                                     modo = 1
                                     alvo = theta_volta
