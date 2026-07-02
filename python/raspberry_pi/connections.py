@@ -151,7 +151,6 @@ def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_eve
 
             if serial_port is None:
                 logger.debug(f"Serial port not available, discarding command: {cmd}")
-                command_queue.task_done()
                 continue
 
             try:
