@@ -167,6 +167,9 @@ def _vision_worker():
                             elif modo == 1:
                                 modo = 2
                                 alvo = rho_lin
+                                if abs(theta_ef) > 0.1: # AJUSTAR ESSE '0.1' ALEATÓRIO
+                                    modo = 1
+                                    alvo = theta_ef
                             elif modo == 2: 
                                 modo = 1
                                 alvo = theta_volta
@@ -198,7 +201,7 @@ def _vision_worker():
                             '''
                 else:
                     pass
-                    #implementar modo de busca aqui
+                    # implementar modo de busca aqui
 
                 ret, encoded_frame = cv2.imencode('.jpg', undistorted)
                 if ret:
@@ -206,6 +209,11 @@ def _vision_worker():
             except Exception as e:
                 logger.debug(f"Vision processing error: {e}")
         
+        else:
+            msg = response_queue.get(timeout=0.2)
+            if msg == "fim modo " + str(modo):
+                ler_tag = True
+
         if time.time() - last_tag > SEARCH_MODE_TIMEOUT:
             ler_tag = True
             modo = 4

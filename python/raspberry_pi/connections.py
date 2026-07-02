@@ -130,6 +130,7 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
                 line = serial_port.readline().decode().strip()
                 if line:
                     response_queue.put(line)
+                    logger.debug(f"Arduino: {line}")
             except Exception as e:
                 logger.debug(f"Serial reader error: {e}")
             finally:
