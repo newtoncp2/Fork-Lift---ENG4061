@@ -218,7 +218,6 @@ def _vision_worker():
                             logger.debug(coord_str)
                             '''
                 elif modo == 4: #MODO DE BUSCA
-                    print("buscando")
                     comando = busca[etapa_busca]
                     etapa_busca += 1
                     if etapa_busca > 3:
@@ -226,8 +225,8 @@ def _vision_worker():
                     
                     command_queue.put(comando)
                     ler_tag = False 
-                
-                if time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
+            
+                elif time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
                     ler_tag = True
                     modo = 4
                     last_tag = time.time()
@@ -240,7 +239,6 @@ def _vision_worker():
                     msg = ""
                 
                 if msg.startswith("fim modo"): 
-                    print("FIM")
                     ler_tag = True
             
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
