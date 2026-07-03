@@ -14,7 +14,7 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 
-client = mqtt.Client(client_id="python-publisher2")
+client = mqtt.Client(client_id="raspipi")
 client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
 
