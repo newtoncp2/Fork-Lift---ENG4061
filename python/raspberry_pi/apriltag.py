@@ -251,14 +251,13 @@ async def _websocket_sender():
     while not stop_event.is_set():
         try:
             payload = ws_queue.get_nowait()
-            print("saí do payload")
         except queue.Empty:
             logger.debug("queue empty in websocket sender, sleeping...")
             await asyncio.sleep(0.01)
             continue
-        print("to na ultima")
         await send_ws(web_socket_url, payload)
-
+        print(f"Sent frame to websocket: {len(payload)} bytes")
+        
 async def main():
     serial_writer_thread = start_serial_writer(ser, command_queue, stop_event)
     serial_reader_thread = start_serial_reader(ser, response_queue, stop_event)
