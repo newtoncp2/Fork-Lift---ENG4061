@@ -18,8 +18,8 @@ IMAGE_PATHS = glob.glob("calibration_images/*.jpg")
 # Critério de refinamento
 criteria = (
     cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER,
-    50,
-    0.0001
+    5000,
+    0.000001
 )
 
 # =========================
