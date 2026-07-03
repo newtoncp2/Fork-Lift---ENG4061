@@ -240,6 +240,7 @@ def _vision_worker():
                     msg = ""
                 
                 if msg == "fim modo " + str(modo): 
+                    print("FIM")
                     ler_tag = True
             
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
