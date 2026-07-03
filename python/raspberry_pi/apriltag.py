@@ -59,6 +59,7 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
+rho_lin = 100
 busca = [f"1 {1}", f"1 -{2}", f"1 {1}", "2 0.15"]
 etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -159,8 +160,8 @@ def _vision_worker():
                             kx += tag.pose_R[2, 0]
                             kz += tag.pose_R[2, 2]
 
-                            if cont >= 2:
-                                x0 /= 2; z0 /= 2; z_lin /= 2; kx /= 2; kz /= 2
+                            if cont >= 3:
+                                x0 /= 3; z0 /= 3; z_lin /= 3; kx /= 3; kz /= 3
                                 
                                 cont = 0
 
@@ -222,6 +223,13 @@ def _vision_worker():
                     
                     command_queue.put(comando)
                     ler_tag = False 
+                
+                if time.time() - last_tag > SEARCH_MODE_TIMEOUT and abs(x0) > 0.01 and abs(z_lin) > 0.20:
+                    ler_tag = True
+                    modo = 4
+                    last_tag = time.time()
+                    print(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
+                
             else:
                 try:
                     msg = response_queue.get(timeout=0.2)
@@ -230,7 +238,7 @@ def _vision_worker():
                 
                 if msg == "fim modo " + str(modo): 
                     ler_tag = True
-
+            
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
                 _put_latest(ws_queue, encoded_frame.tobytes())
@@ -238,12 +246,6 @@ def _vision_worker():
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
 
-
-        if time.time() - last_tag > SEARCH_MODE_TIMEOUT:
-            ler_tag = True
-            modo = 4
-            last_tag = time.time()
-            print(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
 
 async def _websocket_sender():
     while not stop_event.is_set():
