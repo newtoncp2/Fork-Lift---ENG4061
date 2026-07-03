@@ -278,6 +278,8 @@ async def main():
         vision_thread.join(timeout=1.0)
         serial_writer_thread.join(timeout=1.0)
         serial_reader_thread.join(timeout=1.0)
+    
+    print("d")
 
 def _run_main():
     try:
