@@ -59,14 +59,14 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.25\n"]
+busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
 etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 0
 cont = 0
 ler_tag = True
 last_tag = 0
-SEARCH_MODE_TIMEOUT = 3.0  # seconds without tag detection before sending search mode command
+SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
 TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
 
 logger.info("starting mqtt...")
