@@ -172,6 +172,7 @@ def _vision_worker():
                                 theta_ef = theta_k - theta_lin     
                                 theta_volta = -(np.pi/2 - theta_k) 
                                 alvo = 0
+
                                 if modo == 4:
                                     modo = 1 
                                     alvo = theta_ef
@@ -238,7 +239,7 @@ def _vision_worker():
                 except queue.Empty:
                     msg = ""
                 
-                if msg == "fim modo " + str(modo): 
+                if msg: #== "fim modo " + str(modo): 
                     print("FIM")
                     ler_tag = True
             
