@@ -238,7 +238,7 @@ def _vision_worker():
                 
                 if msg == "fim modo " + str(modo): 
                     ler_tag = True
-            
+
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
                 _put_latest(ws_queue, encoded_frame.tobytes())
@@ -257,11 +257,15 @@ async def _websocket_sender():
         await send_ws(web_socket_url, payload)
 
 async def main():
+    print("na main")
     serial_writer_thread = start_serial_writer(ser, command_queue, stop_event)
+    print("a")
     serial_reader_thread = start_serial_reader(ser, response_queue, stop_event)
+    print("b")
     capture_thread = threading.Thread(target=_capture_worker, name="capture-worker", daemon=True)
+    print("c")
     vision_thread = threading.Thread(target=_vision_worker, name="vision-worker", daemon=True)
-
+    print("d")
     capture_thread.start()
     vision_thread.start()
 
@@ -269,7 +273,7 @@ async def main():
         mqtt_client.loop_start()
     except Exception:
         pass
-
+    print("e")
     try:
         await _websocket_sender()
     finally:
@@ -278,7 +282,7 @@ async def main():
         vision_thread.join(timeout=1.0)
         serial_writer_thread.join(timeout=1.0)
         serial_reader_thread.join(timeout=1.0)
-
+        
 def _run_main():
     try:
         asyncio.run(main())
