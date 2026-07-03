@@ -218,7 +218,7 @@ def _vision_worker():
                 elif modo == 4: #MODO DE BUSCA
                     comando = busca[etapa_busca]
                     etapa_busca += 1
-                    if etapa_busca > 3:
+                    if etapa_busca > 4:
                         etapa_busca = 0
                     
                     command_queue.put(comando)
