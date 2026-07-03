@@ -215,7 +215,7 @@ def _vision_worker():
                             logger.debug(coord_str)
                             '''
                 elif modo == 4: #MODO DE BUSCA
-                    comando = f"{modo} {busca[etapa_busca]}"
+                    comando = busca[etapa_busca]
                     etapa_busca += 1
                     if etapa_busca >= 3:
                         etapa_busca = 0
