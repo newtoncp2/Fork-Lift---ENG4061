@@ -59,7 +59,7 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/4}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
 etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 0
