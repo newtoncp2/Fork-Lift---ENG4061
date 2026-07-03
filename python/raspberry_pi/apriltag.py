@@ -143,7 +143,7 @@ def _vision_worker():
                     camera_params=camera_params,
                     tag_size=tag_size,
                 )
-
+        
                 if tags:
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
@@ -224,7 +224,7 @@ def _vision_worker():
                     command_queue.put(comando)
                     ler_tag = False 
                 
-                if time.time() - last_tag > SEARCH_MODE_TIMEOUT and abs(x0) > 0.01 and abs(z_lin) > 0.20:
+                if time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
                     ler_tag = True
                     modo = 4
                     last_tag = time.time()
