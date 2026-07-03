@@ -59,7 +59,7 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
 etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 0
@@ -215,7 +215,7 @@ def _vision_worker():
                             )
                             logger.debug(coord_str)
                             '''
-                elif modo == 4: #MODO DE BUSCA
+                if modo == 4: #MODO DE BUSCA
                     comando = busca[etapa_busca]
                     etapa_busca += 1
                     if etapa_busca > 4:
@@ -223,7 +223,7 @@ def _vision_worker():
                     
                     command_queue.put(comando)
                     ler_tag = False 
-            
+
                 elif time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
                     ler_tag = True
                     modo = 4
