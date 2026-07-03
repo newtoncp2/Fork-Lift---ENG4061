@@ -60,7 +60,7 @@ stop_event = threading.Event()
 
 # Global variables
 rho_lin = 100
-busca = [f"1 {1}", f"1 -{2}", f"1 {1}", "2 0.15"]
+busca = [f"1 {np.pi/3}", f"1 -{np.pi/1.5}", f"1 {np.pi/3}", "2 0.15"]
 etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 0
@@ -145,8 +145,10 @@ def _vision_worker():
                 )
         
                 if tags:
+                    print("vi tag")
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
+                            print("minha tag")
                             last_tag = time.time()
                             process_image(undistorted, tag)
 
@@ -216,6 +218,7 @@ def _vision_worker():
                             logger.debug(coord_str)
                             '''
                 elif modo == 4: #MODO DE BUSCA
+                    print("buscando")
                     comando = busca[etapa_busca]
                     etapa_busca += 1
                     if etapa_busca > 3:
