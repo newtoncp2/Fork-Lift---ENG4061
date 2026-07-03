@@ -13,11 +13,6 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 
-client = mqtt.Client(client_id="python-publisher2")
-client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
-client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
-
-
 def on_connect(client, userdata, flags, rc):
     print("Conectado com código:", rc)
     client.subscribe("empilhadeira/controle")  # assina o tópico ao conectar
@@ -28,10 +23,11 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode("utf-8")
     print("Payload bruto:", payload)
 
-
-client.tls_set()
+client = mqtt.Client(client_id="python-publisher2")
+client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 client.on_connect = on_connect
 client.on_message = on_message
+client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
 
 app = Flask(__name__)
 sock = Sock(app)  # Inicializa o suporte a WebSockets nativos
@@ -94,7 +90,13 @@ def video_feed(ws):
 def main():
     try:
         client.loop_start()
-        app.run(port=5002, debug=False)
+        app.run(
+            host="0.0.0.0",
+            port=5002,
+            debug=False,
+            threaded=True,
+            use_reloader=False,
+        )
     except KeyboardInterrupt:
         print("Encerrando aplicação...")
     except Exception as e:
