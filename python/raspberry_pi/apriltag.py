@@ -171,7 +171,7 @@ def _vision_worker():
                                 theta_k = np.arctan2(kz, kx)       
                                 theta_ef = theta_k - theta_lin     
                                 theta_volta = -(np.pi/2 - theta_k) 
-                                
+                                alvo = 0
                                 if modo == 4:
                                     modo = 1 
                                     alvo = theta_ef
