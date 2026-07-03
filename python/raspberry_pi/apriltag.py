@@ -251,9 +251,12 @@ async def _websocket_sender():
     while not stop_event.is_set():
         try:
             payload = ws_queue.get_nowait()
+            print("saí do payload")
         except queue.Empty:
+            logger.debug("queue empty in websocket sender, sleeping...")
             await asyncio.sleep(0.01)
             continue
+        print("to na ultima")
         await send_ws(web_socket_url, payload)
 
 async def main():
@@ -272,7 +275,6 @@ async def main():
 
     try:
         await _websocket_sender()
-        print("a")
     finally:
         stop_event.set()
         capture_thread.join(timeout=1.0)
