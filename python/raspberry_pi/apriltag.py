@@ -270,14 +270,14 @@ async def main():
     except Exception:
         pass
 
-    #try:
-    #   await _websocket_sender()
-    #finally:
-    stop_event.set()
-    capture_thread.join(timeout=1.0)
-    vision_thread.join(timeout=1.0)
-    serial_writer_thread.join(timeout=1.0)
-    serial_reader_thread.join(timeout=1.0)
+    try:
+        await _websocket_sender()
+    finally:
+        stop_event.set()
+        capture_thread.join(timeout=1.0)
+        vision_thread.join(timeout=1.0)
+        serial_writer_thread.join(timeout=1.0)
+        serial_reader_thread.join(timeout=1.0)
 
 def _run_main():
     try:
