@@ -238,8 +238,8 @@ def _vision_worker():
                     msg = response_queue.get(timeout=0.2)
                 except queue.Empty:
                     msg = ""
-                print("fim modo" + str(modo))                
-                if msg == "fim modo " + str(modo): 
+                
+                if msg.startswith("fim modo"): 
                     print("FIM")
                     ler_tag = True
             
