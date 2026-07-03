@@ -59,7 +59,7 @@ response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/3}", f"1 -{np.pi/1.5}", f"1 {np.pi/3}", "2 0.15"]
+busca = [f"1 {np.pi/3}", f"1 -{np.pi/1.5}", f"1 {np.pi/3}", "2 0.95"]
 etapa_busca = 0
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 modo = 0
@@ -144,10 +144,8 @@ def _vision_worker():
                 )
         
                 if tags:
-                    print("vi tag")
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
-                            print("minha tag")
                             last_tag = time.time()
                             process_image(undistorted, tag)
 
