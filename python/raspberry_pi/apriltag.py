@@ -163,7 +163,7 @@ def _vision_worker():
                                 x0 /= 2; z0 /= 2; z_lin /= 2; kx /= 2; kz /= 2
                                 
                                 cont = 0
-
+                                
                                 rho_lin = np.sqrt(x0**2 + z_lin**2)
                                 theta_lin = np.arctan2(z_lin, x0)  
                                 theta_k = np.arctan2(kz, kx)       
@@ -176,10 +176,10 @@ def _vision_worker():
                                 elif modo == 1:
                                     modo = 2
                                     alvo = rho_lin
-                                    if abs(theta_ef) > 0.1: # AJUSTAR ESSE '0.1' ALEATÓRIO
+                                    if abs(theta_ef) > 0.05: # AJUSTAR ESSE '0.1' ALEATÓRIO
                                         modo = 1
                                         alvo = theta_ef
-                                    elif abs(theta_volta) > 0.1:
+                                    elif abs(theta_volta) > 0.05:
                                         modo = 1
                                         alvo = theta_volta
                                 elif modo == 2: 
@@ -214,7 +214,8 @@ def _vision_worker():
                             )
                             logger.debug(coord_str)
                             '''
-                elif modo == 4:
+
+                elif modo == 4: #MODO DE BUSCA
                     comando = f"{modo} {busca[etapa_busca]}"
                     etapa_busca += 1
                     if etapa_busca >= 3:
@@ -222,7 +223,6 @@ def _vision_worker():
                     
                     command_queue.put(comando)
                     ler_tag = False 
-                    # implementar modo de busca aqui
             else:
                 try:
                     msg = response_queue.get(timeout=0.2)
