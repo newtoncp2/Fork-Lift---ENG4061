@@ -243,7 +243,7 @@ def _vision_worker():
             ler_tag = True
             modo = 4
             last_tag = time.time()
-            logger.debug(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
+            print(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
 
 async def _websocket_sender():
     while not stop_event.is_set():
