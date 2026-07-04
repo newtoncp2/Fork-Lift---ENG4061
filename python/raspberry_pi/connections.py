@@ -14,6 +14,7 @@ import json
 import queue
 import threading
 import logging
+from .config import config
 from typing import Iterable, Optional
 
 logger = logging.getLogger(__name__)
@@ -116,6 +117,26 @@ def step_mqtt(client):
         pass
 
 
+def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_event: threading.Event):
+    """Start a dedicated thread that performs blocking serial reads and puts lines into a queue."""
+    def _worker():
+        while not stop_event.is_set():
+            if serial_port is None:
+                logger.debug("Serial port not available, skipping read")
+                continue
+            
+            try:
+                line = serial_port.readline().decode().strip()
+                if line:
+                    response_queue.put(line)
+                    print(f"Arduino: {line}")
+            except Exception as e:
+                logger.debug(f"Serial reader error: {e}")
+
+    thread = threading.Thread(target=_worker, name="serial-reader", daemon=True)
+    thread.start()
+    return thread
+ 
 def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_event: threading.Event):
     """Start a dedicated thread that performs blocking serial writes from a queue."""
     def _worker():
@@ -124,10 +145,10 @@ def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_eve
                 cmd = command_queue.get(timeout=0.2)
             except queue.Empty:
                 continue
-
+            
+            print(f"Sending command to Arduino: {cmd}")
             if serial_port is None:
                 logger.debug(f"Serial port not available, discarding command: {cmd}")
-                command_queue.task_done()
                 continue
 
             try:
@@ -185,6 +206,7 @@ def make_on_message(serial_port: Optional[object] = None):
     """
     def _to_serial_command(modo: Optional[str], direction: Optional[str], velocidade: int) -> Optional[str]:
         if modo == 0:
+            config.is_autonomous = False
             if direction == "up":
                 return f"0 {velocidade},{velocidade}"
             if direction == "down":
@@ -195,8 +217,10 @@ def make_on_message(serial_port: Optional[object] = None):
                 return f"0 {velocidade},{-velocidade}"
             return None
         if modo == 1:
+            config.is_autonomous = True
             return "1"
         if modo == 3:
+            config.is_autonomous = False
             if direction == "up":
                 return f"3 {velocidade}"
             if direction == "down":

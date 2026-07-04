@@ -5,6 +5,7 @@ import asyncio
 import queue
 import threading
 import time
+from .config import config
 from .setup import setup_resources
 from .connections import (
     create_and_start_mqtt,
@@ -13,6 +14,7 @@ from .connections import (
     make_on_connect,
     make_on_message,
     start_serial_writer,
+    start_serial_reader
 )
 
 # Centralized resource setup
@@ -52,10 +54,20 @@ logger = logging.getLogger(__name__)
 frame_queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=1)
 ws_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=1)
 command_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
+response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
+
 stop_event = threading.Event()
 
+# Global variables
+busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
+etapa_busca = 0
+x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
+modo = 0
+cont = 0
+ler_tag = True
 last_tag = 0
-SEARCH_MODE_TIMEOUT = 6.0  # seconds without tag detection before sending search mode command
+SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
+TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
@@ -68,7 +80,6 @@ mqtt_client = create_and_start_mqtt(
     on_message=make_on_message(ser),
 )
 mqtt_client.user_data_set({"command_queue": command_queue})
-
 
 def _put_latest(work_queue: queue.Queue, value):
     if work_queue.full():
@@ -98,7 +109,7 @@ def _capture_worker():
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
-    global last_tag
+    global last_tag, modo, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -113,52 +124,125 @@ def _vision_worker():
     
     while not stop_event.is_set():        
         # Get the latest frame from the queue, if available
+        
         try:
             frame = frame_queue.get(timeout=0.2)
         except queue.Empty:
             continue
-
+        
+        
         try:
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            tags = at_detector.detect(
-                gray,
-                estimate_tag_pose=True,
-                camera_params=camera_params,
-                tag_size=tag_size,
-            )
+            if ler_tag or config.is_autonomous: #mudar pra and!!
+                tags = at_detector.detect(
+                    gray,
+                    estimate_tag_pose=True,
+                    camera_params=camera_params,
+                    tag_size=tag_size,
+                )
+        
+                if tags:
+                    for tag in tags:
+                        if tag.tag_id == TARGET_TAG_ID:
+                            last_tag = time.time()
+                            process_image(undistorted, tag)
 
-            if tags:
-                last_tag = time.time()
-                for tag in tags:
-                    pitch = process_image(undistorted, tag)
+                            t = tag.pose_t.flatten()
 
-                    pose = np.eye(4)
-                    pose[:3, :3] = tag.pose_R
-                    pose[:3, 3] = tag.pose_t.flatten()
+                            x0 += t[0]
+                            z0 += t[2] - 0.2 # ajuste de calibração
+                            
+                            z_lin += z0 - 0.15
 
-                    draw_pose(undistorted, camera_params, tag_size, pose)
+                            kx += tag.pose_R[2, 0]
+                            kz += tag.pose_R[2, 2]
 
-                    coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]]) * 100
-                    t = tag.pose_t.flatten()
-                    distancia = np.linalg.norm(t) * 100
+                            if cont >= 3:
+                                x0 /= 3; z0 /= 3; z_lin /= 3; kx /= 3; kz /= 3
+                                
+                                cont = 0
 
-                    # TODO: fazer lógica de controle
-                    coord_str = (
-                        f"id:{tag.tag_id},x:{coords[0][0]},y:{coords[1][0]},"
-                        f"z:{coords[2][0]},pitch:{pitch},distancia:{distancia}"
-                    )
-                    logger.debug(coord_str)
+                                rho_lin = np.sqrt(x0**2 + z_lin**2)
+                                theta_lin = np.arctan2(z_lin, x0)  
+                                theta_k = np.arctan2(kz, kx)       
+                                theta_ef = theta_k - theta_lin     
+                                theta_volta = -(np.pi/2 - theta_k) 
+                                alvo = 0
+
+                                if modo == 4:
+                                    modo = 1 
+                                    alvo = theta_ef
+                                elif modo == 1:
+                                    modo = 2
+                                    alvo = rho_lin
+                                    if abs(theta_ef) > 0.05: # AJUSTAR
+                                        modo = 1
+                                        alvo = theta_ef
+                                    elif abs(theta_volta) > 0.05:
+                                        modo = 1
+                                        alvo = theta_volta
+                                elif modo == 2: 
+                                    modo = 1
+                                    alvo = theta_volta
+
+                                comando = f"{modo} {alvo}"
+                                command_queue.put(comando)
+                                ler_tag = False
+                            else:
+                                cont += 1
+
+                            '''
+                            pose = np.eye(4)
+                            pose[:3, :3] = tag.pose_R
+                            pose[:3, 3] = tag.pose_t.flatten()
+
+                            draw_pose(undistorted, camera_params, tag_size, pose)
+
+                            coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])
+                            t = tag.pose_t.flatten()
+                            
+                            distancia = np.linalg.norm(t)
+                            coord_x = coords[0][0]
+                            coord_y = coords[1][0]
+                            coord_z = coords[2][0]
+                            
+
+                            coord_str = (
+                                f"id:{tag.tag_id},x:{coord_x},y:{coord_y},"
+                                f"z:{coord_z},pitch:{pitch},distancia:{distancia}"
+                            )
+                            logger.debug(coord_str)
+                            '''
+                if modo == 4: #MODO DE BUSCA
+                    comando = busca[etapa_busca]
+                    etapa_busca += 1
+                    if etapa_busca > 4:
+                        etapa_busca = 0
                     
-            if time.time() - last_tag > SEARCH_MODE_TIMEOUT:
-                last_tag = time.time()
-                logger.debug(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
-                command_queue.put("2")
+                    command_queue.put(comando)
+                    ler_tag = False 
 
+                elif time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
+                    ler_tag = True
+                    modo = 4
+                    last_tag = time.time()
+                    print(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
+                
+            else:
+                try:
+                    msg = response_queue.get(timeout=0.2)
+                except queue.Empty:
+                    msg = ""
+                
+                if msg.startswith("fim modo"): 
+                    ler_tag = True
+            
             ret, encoded_frame = cv2.imencode('.jpg', undistorted)
             if ret:
                 _put_latest(ws_queue, encoded_frame.tobytes())
+            
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
 
@@ -171,9 +255,10 @@ async def _websocket_sender():
             await asyncio.sleep(0.01)
             continue
         await send_ws(web_socket_url, payload)
-
+        
 async def main():
-    serial_thread = start_serial_writer(ser, command_queue, stop_event)
+    serial_writer_thread = start_serial_writer(ser, command_queue, stop_event)
+    serial_reader_thread = start_serial_reader(ser, response_queue, stop_event)
     capture_thread = threading.Thread(target=_capture_worker, name="capture-worker", daemon=True)
     vision_thread = threading.Thread(target=_vision_worker, name="vision-worker", daemon=True)
 
@@ -191,8 +276,9 @@ async def main():
         stop_event.set()
         capture_thread.join(timeout=1.0)
         vision_thread.join(timeout=1.0)
-        serial_thread.join(timeout=1.0)
-
+        serial_writer_thread.join(timeout=1.0)
+        serial_reader_thread.join(timeout=1.0)
+    
 def _run_main():
     try:
         asyncio.run(main())

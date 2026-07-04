@@ -8,7 +8,7 @@ def process_image(frame, tag):
     center = tag.center.astype(np.int32)
     t = tag.pose_t.flatten()
 
-    distancia = np.linalg.norm(t)*100
+    distancia = np.linalg.norm(t)*100 - 20
     
     rot = R.from_matrix(np.eye(3))
     
