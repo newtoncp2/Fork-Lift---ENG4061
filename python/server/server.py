@@ -30,6 +30,16 @@ camera_params = (
     camera_matrix[1, 2],
 )
 
+at_detector = Detector(
+    families="tag25h9",
+    nthreads=1,
+    quad_decimate=1.0,
+    quad_sigma=0.0,
+    refine_edges=1,
+    decode_sharpening=0.25,
+    debug=0,
+)
+
 def on_connect(client, userdata, flags, rc):
     print("Conectado com código:", rc)
     client.subscribe("empilhadeira/controle")  # assina o tópico ao conectar
@@ -89,15 +99,6 @@ def video_feed(ws):
         connected_clients.add(ws)
         
     try:
-        at_detector = Detector(
-            families="tag25h9",
-            nthreads=1,
-            quad_decimate=1.0,
-            quad_sigma=0.0,
-            refine_edges=1,
-            decode_sharpening=0.25,
-            debug=0,
-        )
         while True:
             # Recebe a imagem do robô
             image_data = ws.receive()
