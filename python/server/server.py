@@ -113,27 +113,35 @@ def video_feed(ws):
             
             frame = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
             
-            undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
-            gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
-            tag_size = 0.05
+            if frame is None:
+                print("Warning: Received malformed image data, skipping frame.")
+                continue
             
-            tags = at_detector.detect(
-                gray,
-                estimate_tag_pose=True,
-                camera_params=camera_params,
-                tag_size=tag_size,
-            )
-            
-            for tag in tags:
-                process_image(undistorted, tag)  # Processa a imagem (desenho de pose, etc.)
+            try:
+                undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
+                gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
+                tag_size = 0.05
                 
-                pose = np.eye(4)
-                pose[:3, :3] = tag.pose_R
-                pose[:3, 3] = tag.pose_t.flatten()
+                tags = at_detector.detect(
+                    gray,
+                    estimate_tag_pose=True,
+                    camera_params=camera_params,
+                    tag_size=tag_size,
+                )
+                
+                for tag in tags:
+                    process_image(undistorted, tag)  # Processa a imagem (desenho de pose, etc.)
+                    
+                    pose = np.eye(4)
+                    pose[:3, :3] = tag.pose_R
+                    pose[:3, 3] = tag.pose_t.flatten()
 
-                draw_pose(undistorted, camera_params, tag_size, pose)
-                
-            image_data = cv2.imencode(".jpg", undistorted)[1].tobytes()
+                    draw_pose(undistorted, camera_params, tag_size, pose)
+                    
+                image_data = cv2.imencode(".jpg", undistorted)[1].tobytes()
+            except Exception as cv_err:
+                print(f"Vision processing error skipped to prevent crash: {cv_err}")
+                continue
 
             # Retransmite para todos os outros clientes conectados (a página web)
             with clients_lock:
