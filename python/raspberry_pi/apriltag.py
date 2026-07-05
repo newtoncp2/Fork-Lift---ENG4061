@@ -1,5 +1,6 @@
 import os
 import logging
+import cv2
 import numpy as np
 import asyncio
 import queue
@@ -104,6 +105,16 @@ def _capture_worker():
             time.sleep(0.01)
             continue
         _put_latest(frame_queue, frame)
+        
+        try:
+            import cv2
+        except ImportError as e:
+            logger.warning(f"Vision dependencies not available: {e}")
+            return
+        
+        ret, encoded_frame = cv2.imencode('.jpg', frame)
+        if ret:
+            _put_latest(ws_queue, encoded_frame.tobytes())   
 
 
 def _vision_worker():
@@ -126,8 +137,7 @@ def _vision_worker():
         try:
             frame = frame_queue.get(timeout=0.2)
         except queue.Empty:
-            continue
-        
+            continue     
         
         try:
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
@@ -213,10 +223,6 @@ def _vision_worker():
                 
                 if msg.startswith("fim modo"): 
                     ler_tag = True
-            
-            ret, encoded_frame = cv2.imencode('.jpg', undistorted)
-            if ret:
-                _put_latest(ws_queue, encoded_frame.tobytes())
             
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")

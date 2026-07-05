@@ -112,7 +112,9 @@ def video_feed(ws):
                 continue
             
             frame = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            
+            undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
+            gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
             tag_size = 0.05
             
             tags = at_detector.detect(
@@ -123,15 +125,15 @@ def video_feed(ws):
             )
             
             for tag in tags:
-                process_image(frame, tag)  # Processa a imagem (desenho de pose, etc.)
+                process_image(undistorted, tag)  # Processa a imagem (desenho de pose, etc.)
                 
                 pose = np.eye(4)
                 pose[:3, :3] = tag.pose_R
                 pose[:3, 3] = tag.pose_t.flatten()
 
-                draw_pose(frame, camera_params, tag_size, pose)
+                draw_pose(undistorted, camera_params, tag_size, pose)
                 
-            image_data = cv2.imencode(".jpg", frame)[1].tobytes()
+            image_data = cv2.imencode(".jpg", undistorted)[1].tobytes()
 
             # Retransmite para todos os outros clientes conectados (a página web)
             with clients_lock:
