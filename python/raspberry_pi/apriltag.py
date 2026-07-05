@@ -117,7 +117,6 @@ def _vision_worker():
     
     try:
         import cv2
-        from .drawing import draw_pose, process_image
     except ImportError as e:
         logger.warning(f"Vision dependencies not available: {e}")
         return
@@ -147,7 +146,6 @@ def _vision_worker():
                     for tag in tags:
                         if tag.tag_id == TARGET_TAG_ID:
                             last_tag = time.time()
-                            process_image(undistorted, tag)
 
                             t = tag.pose_t.flatten()
 
@@ -193,28 +191,6 @@ def _vision_worker():
                             else:
                                 cont += 1
 
-                            '''
-                            pose = np.eye(4)
-                            pose[:3, :3] = tag.pose_R
-                            pose[:3, 3] = tag.pose_t.flatten()
-
-                            draw_pose(undistorted, camera_params, tag_size, pose)
-
-                            coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])
-                            t = tag.pose_t.flatten()
-                            
-                            distancia = np.linalg.norm(t)
-                            coord_x = coords[0][0]
-                            coord_y = coords[1][0]
-                            coord_z = coords[2][0]
-                            
-
-                            coord_str = (
-                                f"id:{tag.tag_id},x:{coord_x},y:{coord_y},"
-                                f"z:{coord_z},pitch:{pitch},distancia:{distancia}"
-                            )
-                            logger.debug(coord_str)
-                            '''
                 if modo == 4: #MODO DE BUSCA
                     comando = busca[etapa_busca]
                     etapa_busca += 1

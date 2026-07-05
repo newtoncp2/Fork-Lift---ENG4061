@@ -3,6 +3,11 @@ from flask_sock import Sock
 import os
 import json
 import paho.mqtt.client as mqtt
+import cv2
+from pathlib import Path
+import numpy as np
+from drawing import draw_pose, process_image
+from pupil_apriltags import Detector
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,6 +17,17 @@ MQTT_HOST = os.getenv("MQTT_HOST")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
+
+base = Path(__file__).resolve().parent.parent
+
+camera_matrix = np.load(str(base / "camera_calibration" / "camera_matrix.npy"))
+dist_coeffs = np.load(str(base / "camera_calibration" / "dist_coeffs.npy"))
+camera_params = (
+    camera_matrix[0, 0],
+    camera_matrix[1, 1],
+    camera_matrix[0, 2],
+    camera_matrix[1, 2],
+)
 
 def on_connect(client, userdata, flags, rc):
     print("Conectado com código:", rc)
@@ -71,6 +87,37 @@ def video_feed(ws):
         while True:
             # Recebe a imagem do robô
             image_data = ws.receive()
+            frame = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            tag_size = 0.05
+            
+            at_detector = Detector(
+                families="tag25h9",
+                nthreads=1,
+                quad_decimate=1.0,
+                quad_sigma=0.0,
+                refine_edges=1,
+                decode_sharpening=0.25,
+                debug=0,
+            )
+            
+            tags = at_detector.detect(
+                gray,
+                estimate_tag_pose=True,
+                camera_params=camera_params,
+                tag_size=tag_size,
+            )
+            
+            for tag in tags:
+                process_image(frame, tag)  # Processa a imagem (desenho de pose, etc.)
+                
+                pose = np.eye(4)
+                pose[:3, :3] = tag.pose_R
+                pose[:3, 3] = tag.pose_t.flatten()
+
+                draw_pose(frame, camera_params, tag_size, pose)
+                
+            image_data = cv2.imencode(".jpg", frame)[1].tobytes()
 
             # Retransmite para todos os outros clientes conectados (a página web)
             if image_data and len(image_data) > 10:
