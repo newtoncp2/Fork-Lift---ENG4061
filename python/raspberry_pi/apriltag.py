@@ -9,7 +9,6 @@ from .config import config
 from .setup import setup_resources
 from .connections import (
     create_and_start_mqtt,
-    send_websocket as send_ws,
     safe_disconnect,
     make_on_connect,
     make_on_message,
@@ -224,13 +223,55 @@ def _vision_worker():
 
 
 async def _websocket_sender():
+    """Keep one WebSocket open and stream all frames through it."""
+    if not web_socket_url:
+        logger.error("WEB_SOCKET_URL is not configured")
+        return
+
+    try:
+        import websockets
+    except ImportError:
+        logger.error("The 'websockets' package is not installed")
+        return
+
+    reconnect_delay = 1.0
+
     while not stop_event.is_set():
         try:
-            payload = ws_queue.get_nowait()
-        except queue.Empty:
-            await asyncio.sleep(0.01)
-            continue
-        await send_ws(web_socket_url, payload)
+            logger.info("Connecting to WebSocket: %s", web_socket_url)
+
+            async with websockets.connect(
+                web_socket_url,
+                ping_interval=20,
+                ping_timeout=20,
+                close_timeout=5,
+                max_size=None,
+            ) as websocket:
+                logger.info("WebSocket connected")
+
+                while not stop_event.is_set():
+                    try:
+                        payload = ws_queue.get_nowait()
+                    except queue.Empty:
+                        await asyncio.sleep(0.01)
+                        continue
+
+                    await asyncio.wait_for(
+                        websocket.send(payload),
+                        timeout=5.0,
+                    )
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.warning(
+                "WebSocket disconnected (%s). Reconnecting in %.1f seconds",
+                exc,
+                reconnect_delay,
+            )
+
+            await asyncio.sleep(reconnect_delay)
+            reconnect_delay = min(reconnect_delay * 2, 10.0)
         
 async def main():
     serial_writer_thread = start_serial_writer(ser, command_queue, stop_event)

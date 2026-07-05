@@ -162,20 +162,6 @@ def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_eve
     thread.start()
     return thread
 
-async def send_websocket(url, message):
-    """Send a message to a websocket server (no-op if url falsy)."""
-    if not url:
-        return
-    try:
-        import websockets
-        try:
-            async with websockets.connect(url) as websocket:
-                await websocket.send(message)
-        except Exception as e:
-            logger.debug(f"WebSocket send error: {e}")
-    except ImportError:
-        logger.debug("websockets not available for sending")
-
 def safe_disconnect(client):
     try:
         client.disconnect()

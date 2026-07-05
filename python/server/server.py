@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask import Flask, request, render_template
+import threading
 from flask_sock import Sock
 import os
 import json
@@ -50,6 +51,7 @@ sock = Sock(app)  # Inicializa o suporte a WebSockets nativos
 
 # Conjunto para armazenar todos os clientes conectados (a página web)
 connected_clients = set()
+clients_lock = threading.Lock()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -82,11 +84,23 @@ def menu():
 @sock.route("/video_feed")
 def video_feed(ws):
     # Adiciona este cliente à lista de transmissores
-    connected_clients.add(ws)
+    with clients_lock:
+        connected_clients.add(ws)
+        
     try:
         while True:
             # Recebe a imagem do robô
             image_data = ws.receive()
+            
+            if image_data is None:
+                break
+            
+            if not isinstance(image_data, (bytes, bytearray)):
+                continue
+
+            if len(image_data) <= 10:
+                continue
+            
             frame = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             tag_size = 0.05
@@ -120,18 +134,32 @@ def video_feed(ws):
             image_data = cv2.imencode(".jpg", frame)[1].tobytes()
 
             # Retransmite para todos os outros clientes conectados (a página web)
-            if image_data and len(image_data) > 10:
-                for client in connected_clients.copy():
-                    if client != ws:
-                        try:
-                            client.send(image_data)
-                        except Exception:
-                            connected_clients.remove(client)
+            with clients_lock:
+                recipients = [
+                    client_ws
+                    for client_ws in connected_clients
+                    if client_ws is not ws
+                ]
+                
+            disconnected = []
+
+            for client_ws in recipients:
+                try:
+                    client_ws.send(image_data)
+                except Exception:
+                    disconnected.append(client_ws)
+                    
+            if disconnected:
+                with clients_lock:
+                    for client_ws in disconnected:
+                        connected_clients.discard(client_ws)
+                        
     except Exception as e:
         if "1000" not in str(e):
             print(f"Erro no WebSocket: {e}")
     finally:
-        connected_clients.discard(ws)
+        with clients_lock:
+            connected_clients.discard(ws)
 
 
 def main():
