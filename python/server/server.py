@@ -45,6 +45,7 @@ client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+client.tls_set()
 
 app = Flask(__name__)
 sock = Sock(app)  # Inicializa o suporte a WebSockets nativos
