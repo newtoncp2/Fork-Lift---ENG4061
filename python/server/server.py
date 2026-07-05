@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 import cv2
 from pathlib import Path
 import numpy as np
-from drawing import draw_pose, process_image
+from .drawing import draw_pose, process_image
 from pupil_apriltags import Detector
 from dotenv import load_dotenv
 
