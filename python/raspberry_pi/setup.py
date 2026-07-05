@@ -133,7 +133,11 @@ def setup_resources(base_dir: str | None = None):
     cap = None
     try:
         import cv2
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(0, cv2.CAP_V4L2)  # Use V4L2 backend for Raspberry Pi
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Set buffer size to 1 to reduce latency
+        cap.set(cv2.CAP_PROP_FPS, 15)
         if not cap.isOpened():
             logger.debug("Camera not available")
             cap = None
