@@ -161,17 +161,18 @@ def _vision_worker():
                                     process_image(undistorted, tag)
 
                                     t = tag.pose_t.flatten()
-
+    
                                     x0 += t[0]
-                                    z0 += t[2] #- 0.2 # ajuste de calibração
-                                    print(f"x0: {x0} , z0: {z0}")
+                                    z0 += t[2] - 0.2 # ajuste de calibração
                                     z_lin += z0 - 0.15
 
                                     kx += tag.pose_R[2, 0]
                                     kz += tag.pose_R[2, 2]
 
                                     if cont >= 3:
-                                        x0 /= 3; z0 /= 3; z_lin /= 3; kx /= 3; kz /= 3
+                                        x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
+                                        print(f"x0: {x0} , z0: {z0}")
+
                                         cont = 0
                                        
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
