@@ -213,23 +213,23 @@ def make_on_message(serial_port: Optional[object] = None):
         if modo == 0:
             config.is_autonomous = False
             if direction == "up":
-                return f"0 {velocidade},{velocidade}"
+                return f"0 {velocidade},{velocidade}\n"
             if direction == "down":
-                return f"0 {-velocidade},{-velocidade}"
+                return f"0 {-velocidade},{-velocidade}\n"
             if direction == "left":
-                return f"0 {-velocidade},{velocidade}"
+                return f"0 {-velocidade},{velocidade}\n"
             if direction == "right":
-                return f"0 {velocidade},{-velocidade}"
+                return f"0 {velocidade},{-velocidade}\n"
             return None
         if modo == 1:
             config.is_autonomous = True
-            return "1"
+            return "1\n"
         if modo == 3:
             config.is_autonomous = False
             if direction == "up":
-                return f"3 {velocidade}"
+                return f"3 {velocidade}\n"
             if direction == "down":
-                return f"3 {-velocidade}"
+                return f"3 {-velocidade}\n"
             return None
 
     def _on_message(client, userdata, msg):
