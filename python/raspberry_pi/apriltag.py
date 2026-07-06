@@ -225,7 +225,7 @@ def _vision_worker():
                         config.estado = "confirmar"
                         
                         if etapa_aprox > 2:
-                            config.estado = "ler"
+                            config.estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
