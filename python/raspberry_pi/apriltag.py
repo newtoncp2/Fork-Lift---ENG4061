@@ -182,7 +182,7 @@ def _vision_worker():
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
-                                        aprox = ["0 0,0", f"1 {-theta_ef}",f"2 {rho_lin}", f"1 {-theta_volta}"] 
+                                        aprox = [f"1 {-theta_ef}",f"2 {rho_lin}", f"1 {-theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
                                         if x0 < 0.13 and rho_lin < 0.2: estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
@@ -233,11 +233,7 @@ def _vision_worker():
                             msg = ""
                         
                         if msg.startswith("fim modo"): 
-                            if estado_anterior == "buscar":
-                                estado = "ler"
-                            else:
-                                estado = estado_anterior 
-                            #estado = "ler" if estado_anterior != "ideal" else "ideal" 
+                            estado = "ler" if estado_anterior != "ideal" else "ideal" 
                                        
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
