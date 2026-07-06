@@ -158,6 +158,7 @@ def _vision_worker():
                         if tags:
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:    
+                                    command_queue.put("0 0,0")
                                     process_image(undistorted, tag)
 
                                     t = tag.pose_t.flatten()
