@@ -65,7 +65,7 @@ ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_busca = 0
 etapa_aprox = 0
 etapa_ideal = 0
-estado = "manual"
+estado = "buscar" # AJUSTAR PARA "manual"
 estado_anterior = "buscar"
 x0, z_lin = 0.0, 0.0
 cont = 0
@@ -137,7 +137,7 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if config.is_autonomous or 1: # tirar or 1
+            if config.is_autonomous or True: # tirar or 1
                 match estado:
                     case "ler":
                         tags = at_detector.detect(
@@ -175,6 +175,7 @@ def _vision_worker():
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo) 
                                         if x0 < 100 and z_lin < 100: estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: estado = "aproximar"; etapa_aprox = 0; etapa_busca = 0;
+                                        
                                         x0 = z0 = z_lin = kx = kz = 0.0
                                     else:
                                         cont += 1
