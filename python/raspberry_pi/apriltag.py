@@ -73,7 +73,13 @@ estado_anterior = "buscar"
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 cont = 0
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
-TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
+TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", ["0", "1"])
+tag_counter = 0
+try:
+    TARGET_TAG_ID = [int(x) for x in TARGET_TAG_ID]
+except (ValueError, TypeError):
+    TARGET_TAG_ID = [0, 1]
+    logger.warning(f"Invalid TARGET_TAG_ID: {TARGET_TAG_ID}")
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
@@ -126,7 +132,7 @@ def _capture_worker():
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
+    global cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior, tag_counter
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -162,7 +168,7 @@ def _vision_worker():
                         )
                         if tags:
                             for tag in tags:
-                                if tag.tag_id == TARGET_TAG_ID:    
+                                if tag.tag_id == TARGET_TAG_ID[tag_counter]:    
                                     t = tag.pose_t.flatten()
     
                                     x0 += t[0]
@@ -223,6 +229,7 @@ def _vision_worker():
                     case "ideal":
                         comando = ideal[etapa_ideal]
                         etapa_ideal += 1
+                        tag_counter = tag_counter + 1 if tag_counter < len(TARGET_TAG_ID) - 1 else 0
                         
                         with command_queue_mutex:
                             command_queue.put(comando) 
@@ -233,6 +240,10 @@ def _vision_worker():
                             etapa_ideal = 0
                             #estado = "manual"
                             config.is_autonomous = False
+                            
+                        # Entra no manual até voltar a ser autonomo pelo server
+                        estado = "manual"
+                        etapa_aprox = 0
                     case "confirmar":
                         try:
                             with response_queue_mutex:
