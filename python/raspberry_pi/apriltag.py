@@ -182,7 +182,7 @@ def _vision_worker():
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = theta_k - theta_lin    
                                         #theta_volta = -(abs(theta_k)-np.pi/4) 
-                                        theta_volta = -(np.pi/2 - abs(theta_k))
+                                        theta_volta = (np.pi/2 - abs(theta_k))
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
