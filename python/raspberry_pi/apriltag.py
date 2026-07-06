@@ -164,6 +164,7 @@ def _vision_worker():
     
                                     x0 += t[0]
                                     z0 += t[2] - 0.2 # ajuste de calibração
+                                    print(f"x0: {x0} , z0: {z0}")
                                     z_lin += z0 - 0.15
 
                                     kx += tag.pose_R[2, 0]
@@ -172,7 +173,7 @@ def _vision_worker():
                                     if cont >= 3:
                                         x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
                                         print(f"x0: {x0} , z0: {z0}")
-
+                                    
                                         cont = 0
                                        
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
