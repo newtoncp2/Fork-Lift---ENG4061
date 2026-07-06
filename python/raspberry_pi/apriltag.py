@@ -67,7 +67,7 @@ etapa_aprox = 0
 etapa_ideal = 0
 estado = "buscar" # AJUSTAR PARA "manual"
 estado_anterior = "buscar"
-x0, z_lin = 0.0, 0.0
+x0, z0, z_lin = 0.0, 0.0, 0.0
 cont = 0
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
 TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
@@ -111,7 +111,7 @@ def _capture_worker():
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z_lin, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
+    global cont, x0, z0, z_lin, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
