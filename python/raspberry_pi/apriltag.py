@@ -187,14 +187,14 @@ def _vision_worker():
                                         theta_lin = np.arctan2(z_lin, x0)  
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = theta_k - theta_lin    
-                                        theta_volta = -(abs(theta_k)-np.pi/4) 
+                                        theta_volta = -(np.pi/2-abs(theta_k)) 
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
-                                        if x0 < 0.13 and rho_lin < 0.2: config.estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        if x0 < 0.13 and rho_lin < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: config.estado = "aproximar"; etapa_busca = 0;
 
                                         x0 = z0 = z_lin = kx = kz = 0.0
