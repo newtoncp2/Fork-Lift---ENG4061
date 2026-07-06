@@ -241,7 +241,7 @@ def _vision_worker():
                             config.is_autonomous = False
                             
                         # Entra no manual até voltar a ser autonomo pelo server
-                        config.estado = "manual"
+                        #config.estado = "manual"
                         etapa_aprox = 0
                     case "confirmar":
                         try:
