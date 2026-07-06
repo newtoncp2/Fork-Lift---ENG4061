@@ -233,7 +233,11 @@ def _vision_worker():
                             msg = ""
                         
                         if msg.startswith("fim modo"): 
-                            estado = "ler" if estado_anterior != "ideal" else "ideal"
+                            if estado_anterior == "buscar":
+                                estado = "ler"
+                            else:
+                                estado = estado_anterior
+                            #estado = "ler" if estado_anterior != "ideal" else "ideal" 
                                        
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
