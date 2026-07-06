@@ -159,7 +159,7 @@ def _vision_worker():
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:    
                                     process_image(undistorted, tag)
-                                    
+
                                     t = tag.pose_t.flatten()
     
                                     x0 += t[0]
@@ -233,11 +233,7 @@ def _vision_worker():
                             msg = ""
                         
                         if msg.startswith("fim modo"): 
-                            if estado_anterior == "buscar":
-                                estado = "ler"
-                            else:
-                                estado = estado_anterior
-                            #estado = "ler" if estado_anterior != "ideal" else "ideal" 
+                            estado = "ler" if estado_anterior != "ideal" else "ideal" 
                                        
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
