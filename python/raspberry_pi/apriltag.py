@@ -69,7 +69,6 @@ ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_busca = 0
 etapa_aprox = 0
 etapa_ideal = 0
-estado = "buscar" # AJUSTAR PARA "manual"
 estado_anterior = "buscar"
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 cont = 0
@@ -132,8 +131,8 @@ def _capture_worker():
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
-    #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior, tag_counter
+    #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado_anterior
+    global cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado_anterior, tag_counter
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -159,7 +158,7 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if config.is_autonomous or True: # tirar or 1
-                match estado:
+                match config.estado:
                     case "ler":
                         tags = at_detector.detect(
                             gray,
@@ -195,15 +194,15 @@ def _vision_worker():
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
-                                        if x0 < 0.13 and rho_lin < 0.2: estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
-                                        else: estado = "aproximar"; etapa_busca = 0;
+                                        if x0 < 0.13 and rho_lin < 0.2: config.estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        else: config.estado = "aproximar"; etapa_busca = 0;
 
                                         x0 = z0 = z_lin = kx = kz = 0.0
                                     else:
                                         cont += 1
 
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
-                        estado = estado_anterior if (estado == "ler" and cont == 0) else estado # AJUSTAR CONDIÇÃO
+                        config.estado = estado_anterior if (config.estado == "ler" and cont == 0) else config.estado # AJUSTAR CONDIÇÃO
                     case "buscar":
                         comando = busca[etapa_busca]
                         etapa_busca += 1
@@ -211,7 +210,7 @@ def _vision_worker():
                         with command_queue_mutex:
                             command_queue.put(comando) 
                         estado_anterior = "buscar"
-                        estado = "confirmar"                                       
+                        config.estado = "confirmar"                                       
                         
                         if etapa_busca > 4:
                             etapa_busca = 0
@@ -222,10 +221,10 @@ def _vision_worker():
                         with command_queue_mutex:
                             command_queue.put(comando)
                         estado_anterior = "aproximar"
-                        estado = "confirmar"
+                        config.estado = "confirmar"
                         
                         if etapa_aprox > 2:
-                            estado = "manual"
+                            config.estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
@@ -235,15 +234,15 @@ def _vision_worker():
                         with command_queue_mutex:
                             command_queue.put(comando) 
                         estado_anterior = "ideal"
-                        estado = "confirmar" 
+                        config.estado = "confirmar" 
                     
                         if etapa_ideal > 4:
                             etapa_ideal = 0
-                            #estado = "manual"
+                            #config.estado = "manual"
                             config.is_autonomous = False
                             
                         # Entra no manual até voltar a ser autonomo pelo server
-                        estado = "manual"
+                        config.estado = "manual"
                         etapa_aprox = 0
                     case "confirmar":
                         try:
@@ -253,7 +252,7 @@ def _vision_worker():
                             msg = ""
                         
                         if msg.startswith("fim modo"): 
-                            estado = "ler" if estado_anterior != "ideal" else "ideal" 
+                            config.estado = "ler" if estado_anterior != "ideal" else "ideal" 
                                        
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")

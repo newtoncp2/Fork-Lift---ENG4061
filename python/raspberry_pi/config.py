@@ -1,11 +1,16 @@
 class AppState:
     def __init__(self):
         self._is_autonomous = False
+        self._estado = "manual"  # Default state is manual
 
     # Using properties lets you add logic/validation later if needed
     @property
     def is_autonomous(self):
         return self._is_autonomous
+    
+    @property
+    def estado(self):
+        return self._estado
 
     @is_autonomous.setter
     def is_autonomous(self, value):
@@ -13,6 +18,13 @@ class AppState:
             self._is_autonomous = value
         else:
             raise ValueError("is_autonomous must be a boolean value")
+        
+    @estado.setter
+    def estado(self, value):
+        if isinstance(value, str):
+            self._estado = value
+        else:
+            raise ValueError("estado must be a string value")
 
 
 config = AppState()
