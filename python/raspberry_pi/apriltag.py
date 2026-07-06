@@ -194,7 +194,7 @@ def _vision_worker():
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
-                                        if x0 < 0.13 and rho_lin < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        if x0 < 10.13 and rho_lin < 10.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: config.estado = "aproximar"; etapa_busca = 0;
 
                                         x0 = z0 = z_lin = kx = kz = 0.0
@@ -224,7 +224,7 @@ def _vision_worker():
                         config.estado = "confirmar"
                         
                         if etapa_aprox > 2:
-                            config.estado = "buscar"
+                            config.estado = "ler"
                             etapa_aprox = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
