@@ -224,7 +224,7 @@ def _vision_worker():
                         config.estado = "confirmar"
                         
                         if etapa_aprox > 2:
-                            config.estado = "manual"
+                            config.estado = "buscar"
                             etapa_aprox = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
@@ -238,7 +238,6 @@ def _vision_worker():
                     
                         if etapa_ideal > 4:
                             etapa_ideal = 0
-                            #config.estado = "manual"
                             config.is_autonomous = False
                             
                         # Entra no manual até voltar a ser autonomo pelo server
