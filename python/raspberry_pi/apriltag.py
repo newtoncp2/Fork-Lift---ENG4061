@@ -193,7 +193,7 @@ def _vision_worker():
                                         cont += 1
 
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
-                        estado = estado_anterior if (estado == "ler" and cont == 0) else estado
+                        estado = estado_anterior if (estado == "ler" and cont == 0) else estado # AJUSTAR CONDIÇÃO
                     case "buscar":
                         comando = busca[etapa_busca]
                         etapa_busca += 1
