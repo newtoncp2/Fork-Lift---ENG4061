@@ -171,25 +171,23 @@ def _vision_worker():
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:    
                                     t = tag.pose_t.flatten()
     
-                                    x0 += t[0]
-                                    z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
-                                    z_lin += z0 - 0.35 #
+                                    x0 += t[2]
+                                    z0 += t[0] # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    z_lin += z0 - 0.25 #
 
-                                    kx += tag.pose_R[2, 0]
-                                    kz += tag.pose_R[2, 2]
+                                    kx += tag.pose_R[2, 2]
+                                    kz += tag.pose_R[2, 0]
 
                                     if cont >= 3:
                                         x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
 
                                         cont = 0
                                        
-                                        #rho_lin = np.sqrt(x0**2 + z_lin**2)
-                                        rho_lin = np.sqrt(x0**2 + z0**2)
-                                        #theta_lin = np.arctan2(z_lin, x0)
-                                        theta_lin = np.arctan2(z0,x0)
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)
+                                        theta_lin = np.arctan2(z_lin, x0)
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = theta_k - theta_lin    
-                                        theta_volta = -theta_k 
+                                        theta_volta = np.pi-theta_k 
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
