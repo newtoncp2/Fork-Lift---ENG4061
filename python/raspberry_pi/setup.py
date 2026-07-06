@@ -133,7 +133,7 @@ def setup_resources(base_dir: str | None = None):
     cap = None
     try:
         import cv2
-        cap = cv2.VideoCapture(1, cv2.CAP_V4L2)  # Use V4L2 backend for Raspberry Pi
+        cap = cv2.VideoCapture(-1, cv2.CAP_V4L2)  # Use V4L2 backend for Raspberry Pi
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320) # lower resolution for faster processing
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Set buffer size to 1 to reduce latency
