@@ -5,6 +5,7 @@ import asyncio
 import queue
 import threading
 import time
+import json
 from .config import config
 from .setup import setup_resources
 from scipy.spatial.transform import Rotation as R
@@ -77,7 +78,13 @@ tmed = np.zeros(3)
 cont = 0
 
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
-TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
+TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [0, 1])
+tag_counter = 0
+try:
+    TARGET_TAG_ID = json.loads(TARGET_TAG_ID)
+except (ValueError, TypeError):
+    logger.warning(f"Invalid TARGET_TAG_ID: {TARGET_TAG_ID}")
+    TARGET_TAG_ID = [0, 1]
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
