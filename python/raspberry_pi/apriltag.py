@@ -9,7 +9,6 @@ from .config import config
 from .setup import setup_resources
 from .connections import (
     create_and_start_mqtt,
-    send_websocket as send_ws,
     safe_disconnect,
     make_on_connect,
     make_on_message,
@@ -107,6 +106,16 @@ def _capture_worker():
             time.sleep(0.01)
             continue
         _put_latest(frame_queue, frame)
+    
+    try:
+        import cv2
+    except ImportError as e:
+        logger.warning(f"Vision dependencies not available: {e}")
+        return
+        
+    ret, encoded_frame = cv2.imencode('.jpg', frame)
+    if ret:
+        _put_latest(ws_queue, encoded_frame.tobytes())  
     
 def _vision_worker():
     """Process frames for tags if detector is available."""
@@ -222,45 +231,60 @@ def _vision_worker():
                         
                         if msg.startswith("fim modo"): 
                             estado = "ler" if estado_anterior != "ideal" else "ideal"
-                           
-            ret, encoded_frame = cv2.imencode('.jpg', undistorted)
-            if ret:
-                _put_latest(ws_queue, encoded_frame.tobytes())
-            
+                                       
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
 
-'''
-pose = np.eye(4)
-pose[:3, :3] = tag.pose_R
-pose[:3, 3] = tag.pose_t.flatten()
-
-draw_pose(undistorted, camera_params, tag_size, pose)
-
-coords = np.array([tag.pose_t[0], tag.pose_t[1], tag.pose_t[2]])
-t = tag.pose_t.flatten()
-
-distancia = np.linalg.norm(t)
-coord_x = coords[0][0]
-coord_y = coords[1][0]
-coord_z = coords[2][0]
-
-
-coord_str = (
-    f"id:{tag.tag_id},x:{coord_x},y:{coord_y},"
-    f"z:{coord_z},pitch:{pitch},distancia:{distancia}"
-)
-logger.debug(coord_str)
-'''   
-
 async def _websocket_sender():
+    """Keep one WebSocket open and stream all frames through it."""
+    if not web_socket_url:
+        logger.error("WEB_SOCKET_URL is not configured")
+        return
+
+    try:
+        import websockets
+    except ImportError:
+        logger.error("The 'websockets' package is not installed")
+        return
+
+    reconnect_delay = 1.0
+
     while not stop_event.is_set():
         try:
-            payload = ws_queue.get_nowait()
-        except queue.Empty:
-            await asyncio.sleep(0.01)
-            continue
-        await send_ws(web_socket_url, payload)
+            logger.info("Connecting to WebSocket: %s", web_socket_url)
+
+            async with websockets.connect(
+                web_socket_url,
+                ping_interval=20,
+                ping_timeout=20,
+                close_timeout=5,
+                max_size=None,
+            ) as websocket:
+                logger.info("WebSocket connected")
+
+                while not stop_event.is_set():
+                    try:
+                        payload = ws_queue.get_nowait()
+                    except queue.Empty:
+                        await asyncio.sleep(0.01)
+                        continue
+
+                    await asyncio.wait_for(
+                        websocket.send(payload),
+                        timeout=5.0,
+                    )
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.warning(
+                "WebSocket disconnected (%s). Reconnecting in %.1f seconds",
+                exc,
+                reconnect_delay,
+            )
+
+            await asyncio.sleep(reconnect_delay)
+            reconnect_delay = min(reconnect_delay * 2, 10.0)
         
 async def main():
     serial_writer_thread = start_serial_writer(ser, command_queue, stop_event)

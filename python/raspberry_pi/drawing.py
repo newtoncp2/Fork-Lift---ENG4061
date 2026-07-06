@@ -14,7 +14,7 @@ def process_image(frame, tag):
     
     try:
         rot = R.from_matrix(tag.pose_R)
-    except:
+    except Exception:
         pass
         
     yaw, pitch, roll = rot.as_euler('zyx', degrees=True)
