@@ -290,12 +290,13 @@ async def _websocket_sender():
         except asyncio.CancelledError:
             raise
         except Exception as exc:
+            '''
             logger.warning(
                 "WebSocket disconnected (%s). Reconnecting in %.1f seconds",
                 exc,
                 reconnect_delay,
             )
-
+            '''
             await asyncio.sleep(reconnect_delay)
             reconnect_delay = min(reconnect_delay * 2, 10.0)
         
