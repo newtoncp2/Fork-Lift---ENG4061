@@ -1,6 +1,6 @@
 class AppState:
     def __init__(self):
-        self._is_autonomous = False
+        self._is_autonomous = True
 
     # Using properties lets you add logic/validation later if needed
     @property
