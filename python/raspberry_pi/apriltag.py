@@ -175,8 +175,8 @@ def _vision_worker():
                                         cont = 0
                                        
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
-                                        theta_lin = np.arctan2(z_lin, x0)  
-                                        theta_k = np.arctan2(kz, kx)       
+                                        theta_lin = -np.arctan2(z_lin, x0)  
+                                        theta_k = -np.arctan2(kz, kx)       
                                         theta_ef = theta_k - theta_lin     
                                         theta_volta = -(np.pi/2 - theta_k) 
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
