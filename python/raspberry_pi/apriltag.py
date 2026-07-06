@@ -163,7 +163,7 @@ def _vision_worker():
                                     t = tag.pose_t.flatten()
     
                                     x0 += t[0]
-                                    z0 += t[2] - 0.2 # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
                                     z_lin += z0 - 0.15 #
 
                                     kx += tag.pose_R[2, 0]
