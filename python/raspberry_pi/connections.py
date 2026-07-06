@@ -15,6 +15,7 @@ import queue
 import threading
 import logging
 from .config import config
+from .db import parse_telemetria, insere_telemetria
 from typing import Iterable, Optional
 
 logger = logging.getLogger(__name__)
@@ -122,7 +123,7 @@ def start_serial_reader(
     response_queue: "queue.Queue[str]",
     stop_event: threading.Event,
     response_queue_mutex: Optional[object] = None,
-):
+    db_pool=None):
     """Start a dedicated thread that performs blocking serial reads and puts lines into a queue."""
     def _worker():
         while not stop_event.is_set():
@@ -139,6 +140,9 @@ def start_serial_reader(
                         with response_queue_mutex:
                             response_queue.put(line)
                     print(f"Arduino: {line}")
+                    dados = parse_telemetria(line)
+                    if dados:
+                        insere_telemetria(db_pool, *dados)
             except Exception as e:
                 logger.debug(f"Serial reader error: {e}")
 

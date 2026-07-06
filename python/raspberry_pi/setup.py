@@ -15,6 +15,7 @@ import logging
 from pathlib import Path
 import numpy as np
 from dotenv import load_dotenv
+from .db import create_db_pool
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ def setup_resources(base_dir: str | None = None):
     Returns:
         dict: A dictionary containing the following keys:
             - ser (serial.Serial | None): Serial port for hardware communication
+            - db_pool (psycopg2.pool.SimpleConnectionPool | None): Pool for telemetry inserts
             - mqtt_username (str | None): MQTT broker username from environment
             - mqtt_password (str | None): MQTT broker password from environment
             - mqtt_host (str | None): MQTT broker hostname from environment
@@ -73,6 +75,20 @@ def setup_resources(base_dir: str | None = None):
     mqtt_host = os.getenv("MQTT_HOST")
     mqtt_port = int(os.getenv("MQTT_PORT")) if os.getenv("MQTT_PORT") else None
     web_socket_url = os.getenv("WEB_SOCKET_URL")
+
+    #banco de dados
+    PGHOST = os.getenv("PGHOST")
+    PGPORT = int(os.getenv("PGPORT", "5432"))
+    PGDB   = os.getenv("PGDATABASE")
+    PGUSER = os.getenv("PGUSER")
+    PGPASS = os.getenv("PGPASSWORD")
+
+    # Try database connection pool (non-fatal)
+    # Uses the PG* environment variables above; if incomplete or psycopg2 is
+    # unavailable, db_pool will be None and inserts become no-ops (see db.py)
+    db_pool = create_db_pool(
+        host=PGHOST, port=PGPORT, dbname=PGDB, user=PGUSER, password=PGPASS
+    )
 
     # Resolve base directory for loading calibration files
     # Uses either the provided path or the package parent directory
@@ -149,6 +165,7 @@ def setup_resources(base_dir: str | None = None):
 
     return {
         "ser": ser,
+        "db_pool": db_pool,
         "mqtt_username": mqtt_username,
         "mqtt_password": mqtt_password,
         "mqtt_host": mqtt_host,
