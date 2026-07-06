@@ -164,7 +164,7 @@ def _vision_worker():
     
                                     x0 += t[0]
                                     z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
-                                    z_lin += z0 - 0.15 #
+                                    z_lin += z0 - 0.25 #
 
                                     kx += tag.pose_R[2, 0]
                                     kz += tag.pose_R[2, 2]
@@ -174,7 +174,7 @@ def _vision_worker():
 
                                         cont = 0
                                        
-                                        rho_lin = np.sqrt(x0**2 + z_lin**2)
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)/4
                                         theta_lin = np.arctan2(z_lin, x0)  
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = theta_k - theta_lin    
@@ -182,7 +182,7 @@ def _vision_worker():
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
-                                        aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {-theta_k}"] 
+                                        aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_k}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
                                         if x0 < 0.13 and rho_lin < 0.2: estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
