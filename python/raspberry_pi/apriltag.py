@@ -54,6 +54,10 @@ frame_queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=1)
 ws_queue: "queue.Queue[bytes]" = queue.Queue(maxsize=1)
 command_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
 response_queue: "queue.Queue[str]" = queue.Queue(maxsize=100)
+frame_queue_mutex = threading.Lock()
+ws_queue_mutex = threading.Lock()
+command_queue_mutex = threading.Lock()
+response_queue_mutex = threading.Lock()
 
 stop_event = threading.Event()
 
@@ -78,18 +82,19 @@ mqtt_client = create_and_start_mqtt(
     on_connect=make_on_connect(["empilhadeira/controle"]),
     on_message=make_on_message(ser),
 )
-mqtt_client.user_data_set({"command_queue": command_queue})
+mqtt_client.user_data_set({"command_queue": command_queue, "command_queue_mutex": command_queue_mutex})
 
-def _put_latest(work_queue: queue.Queue, value):
-    if work_queue.full():
+def _put_latest(work_queue: queue.Queue, work_queue_mutex: threading.Lock, value):
+    with work_queue_mutex:
+        if work_queue.full():
+            try:
+                work_queue.get_nowait()
+            except queue.Empty:
+                pass
         try:
-            work_queue.get_nowait()
-        except queue.Empty:
+            work_queue.put_nowait(value)
+        except queue.Full:
             pass
-    try:
-        work_queue.put_nowait(value)
-    except queue.Full:
-        pass
 
 
 def _capture_worker():
@@ -103,7 +108,7 @@ def _capture_worker():
         if not ret:
             time.sleep(0.01)
             continue
-        _put_latest(frame_queue, frame)
+        _put_latest(frame_queue, frame_queue_mutex, frame)
         
         try:
             import cv2
@@ -113,7 +118,7 @@ def _capture_worker():
         
         ret, encoded_frame = cv2.imencode('.jpg', frame)
         if ret:
-            _put_latest(ws_queue, encoded_frame.tobytes())   
+            _put_latest(ws_queue, ws_queue_mutex, encoded_frame.tobytes())   
 
 
 def _vision_worker():
@@ -134,7 +139,8 @@ def _vision_worker():
         # Get the latest frame from the queue, if available
         
         try:
-            frame = frame_queue.get(timeout=0.2)
+            with frame_queue_mutex:
+                frame = frame_queue.get_nowait()
         except queue.Empty:
             continue     
         
@@ -166,7 +172,11 @@ def _vision_worker():
                             kz += tag.pose_R[2, 2]
 
                             if cont >= 3:
-                                x0 /= 3; z0 /= 3; z_lin /= 3; kx /= 3; kz /= 3
+                                x0 /= 3
+                                z0 /= 3
+                                z_lin /= 3
+                                kx /= 3
+                                kz /= 3
                                 
                                 cont = 0
 
@@ -194,7 +204,8 @@ def _vision_worker():
                                     alvo = theta_volta
 
                                 comando = f"{modo} {alvo}"
-                                command_queue.put(comando)
+                                with command_queue_mutex:
+                                    command_queue.put(comando)
                                 ler_tag = False
                             else:
                                 cont += 1
@@ -205,7 +216,8 @@ def _vision_worker():
                     if etapa_busca > 4:
                         etapa_busca = 0
                     
-                    command_queue.put(comando)
+                    with command_queue_mutex:
+                        command_queue.put(comando)
                     ler_tag = False 
 
                 elif time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
@@ -216,7 +228,8 @@ def _vision_worker():
                 
             else:
                 try:
-                    msg = response_queue.get(timeout=0.2)
+                    with response_queue_mutex:
+                        msg = response_queue.get_nowait()
                 except queue.Empty:
                     msg = ""
                 
@@ -256,7 +269,8 @@ async def _websocket_sender():
 
                 while not stop_event.is_set():
                     try:
-                        payload = ws_queue.get_nowait()
+                        with ws_queue_mutex:
+                            payload = ws_queue.get_nowait()
                     except queue.Empty:
                         await asyncio.sleep(0.01)
                         continue
@@ -279,8 +293,8 @@ async def _websocket_sender():
             reconnect_delay = min(reconnect_delay * 2, 10.0)
         
 async def main():
-    serial_writer_thread = start_serial_writer(ser, command_queue, stop_event)
-    serial_reader_thread = start_serial_reader(ser, response_queue, stop_event)
+    serial_writer_thread = start_serial_writer(ser, command_queue, stop_event, command_queue_mutex)
+    serial_reader_thread = start_serial_reader(ser, response_queue, stop_event, response_queue_mutex)
     capture_thread = threading.Thread(target=_capture_worker, name="capture-worker", daemon=True)
     vision_thread = threading.Thread(target=_vision_worker, name="vision-worker", daemon=True)
 

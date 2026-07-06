@@ -117,7 +117,12 @@ def step_mqtt(client):
         pass
 
 
-def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_event: threading.Event):
+def start_serial_reader(
+    serial_port,
+    response_queue: "queue.Queue[str]",
+    stop_event: threading.Event,
+    response_queue_mutex: Optional[object] = None,
+):
     """Start a dedicated thread that performs blocking serial reads and puts lines into a queue."""
     def _worker():
         while not stop_event.is_set():
@@ -128,7 +133,11 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
             try:
                 line = serial_port.readline().decode().strip()
                 if line:
-                    response_queue.put(line)
+                    if response_queue_mutex is None:
+                        response_queue.put(line)
+                    else:
+                        with response_queue_mutex:
+                            response_queue.put(line)
                     print(f"Arduino: {line}")
             except Exception as e:
                 logger.debug(f"Serial reader error: {e}")
@@ -137,13 +146,23 @@ def start_serial_reader(serial_port, response_queue: "queue.Queue[str]", stop_ev
     thread.start()
     return thread
  
-def start_serial_writer(serial_port, command_queue: "queue.Queue[str]", stop_event: threading.Event):
+def start_serial_writer(
+    serial_port,
+    command_queue: "queue.Queue[str]",
+    stop_event: threading.Event,
+    command_queue_mutex: Optional[object] = None,
+):
     """Start a dedicated thread that performs blocking serial writes from a queue."""
     def _worker():
         while not stop_event.is_set():
             try:
-                cmd = command_queue.get(timeout=0.2)
+                if command_queue_mutex is None:
+                    cmd = command_queue.get(timeout=0.2)
+                else:
+                    with command_queue_mutex:
+                        cmd = command_queue.get_nowait()
             except queue.Empty:
+                stop_event.wait(0.2)
                 continue
             
             print(f"Sending command to Arduino: {cmd}")
@@ -223,10 +242,15 @@ def make_on_message(serial_port: Optional[object] = None):
             velocidade = int(json_string.get("velocidade", 0))
 
             command_queue = userdata.get("command_queue") if isinstance(userdata, dict) else None
+            command_queue_mutex = userdata.get("command_queue_mutex") if isinstance(userdata, dict) else None
             command = _to_serial_command(modo, direction, velocidade)
 
             if command_queue and command:
-                command_queue.put(command)
+                if command_queue_mutex is None:
+                    command_queue.put(command)
+                else:
+                    with command_queue_mutex:
+                        command_queue.put(command)
             elif serial_port and command:
                 try:
                     serial_port.write(command.encode())
