@@ -5,6 +5,7 @@ import asyncio
 import queue
 import threading
 import time
+import json
 from .config import config
 from .setup import setup_resources
 from .connections import (
@@ -73,13 +74,13 @@ estado_anterior = "buscar"
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
 cont = 0
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
-TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", ["0", "1"])
+TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [0, 1])
 tag_counter = 0
 try:
-    TARGET_TAG_ID = [int(x) for x in TARGET_TAG_ID]
+    TARGET_TAG_ID = json.loads(TARGET_TAG_ID)
 except (ValueError, TypeError):
-    TARGET_TAG_ID = [0, 1]
     logger.warning(f"Invalid TARGET_TAG_ID: {TARGET_TAG_ID}")
+    TARGET_TAG_ID = [0, 1]
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
