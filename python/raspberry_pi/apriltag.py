@@ -213,7 +213,7 @@ def _vision_worker():
                         estado = "confirmar"
                         
                         if etapa_aprox > 2:
-                            estado = "ideal"
+                            estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
