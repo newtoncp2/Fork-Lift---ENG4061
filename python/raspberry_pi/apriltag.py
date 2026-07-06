@@ -63,13 +63,16 @@ stop_event = threading.Event()
 
 # Global variables
 busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
+aprox = ["","",""]
+ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_busca = 0
+etapa_aprox = 0
+etapa_ideal = 0
+estado = "buscar" # AJUSTAR PARA "manual"
+estado_anterior = "buscar"
 x0, z0, z_lin, kx, kz = 0.0, 0.0, 0.0, 0.0, 0.0
-modo = 0
 cont = 0
-ler_tag = True
-last_tag = 0
-SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
+#SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
 TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
 
 logger.info("starting mqtt...")
@@ -95,7 +98,6 @@ def _put_latest(work_queue: queue.Queue, work_queue_mutex: threading.Lock, value
             work_queue.put_nowait(value)
         except queue.Full:
             pass
-
 
 def _capture_worker():
     """Capture frames from camera if available."""
@@ -123,7 +125,8 @@ def _capture_worker():
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
-    global last_tag, modo, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca
+    #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
+    global cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -148,97 +151,100 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if ler_tag or config.is_autonomous: #mudar pra and!!
-                tags = at_detector.detect(
-                    gray,
-                    estimate_tag_pose=True,
-                    camera_params=camera_params,
-                    tag_size=tag_size,
-                )
-        
-                if tags:
-                    for tag in tags:
-                        if tag.tag_id == TARGET_TAG_ID:
-                            last_tag = time.time()
+            if config.is_autonomous or True: # tirar or 1
+                match estado:
+                    case "ler":
+                        tags = at_detector.detect(
+                            gray,
+                            estimate_tag_pose=True,
+                            camera_params=camera_params,
+                            tag_size=tag_size,
+                        )
+                        if tags:
+                            for tag in tags:
+                                if tag.tag_id == TARGET_TAG_ID:    
+                                    t = tag.pose_t.flatten()
+    
+                                    x0 += t[0]
+                                    z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    z_lin += z0 - 0.25 #
 
-                            t = tag.pose_t.flatten()
+                                    kx += tag.pose_R[2, 0]
+                                    kz += tag.pose_R[2, 2]
 
-                            x0 += t[0]
-                            z0 += t[2] - 0.2 # ajuste de calibração
-                            
-                            z_lin += z0 - 0.15
+                                    if cont >= 3:
+                                        x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
 
-                            kx += tag.pose_R[2, 0]
-                            kz += tag.pose_R[2, 2]
+                                        cont = 0
+                                       
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)/4
+                                        theta_lin = np.arctan2(z_lin, x0)  
+                                        theta_k = np.arctan2(kz, kx)       
+                                        theta_ef = theta_k - theta_lin    
+                                        theta_volta = -(abs(theta_k)-np.pi/4) 
 
-                            if cont >= 3:
-                                x0 /= 3
-                                z0 /= 3
-                                z_lin /= 3
-                                kx /= 3
-                                kz /= 3
-                                
-                                cont = 0
+                                        print(f"x0: {x0}, rho': {rho_lin}")
+                                        print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
+                                        aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
-                                rho_lin = np.sqrt(x0**2 + z_lin**2)
-                                theta_lin = np.arctan2(z_lin, x0)  
-                                theta_k = np.arctan2(kz, kx)       
-                                theta_ef = theta_k - theta_lin     
-                                theta_volta = -(np.pi/2 - theta_k) 
-                                alvo = 0
+                                        #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
+                                        if x0 < 0.13 and rho_lin < 0.2: estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        else: estado = "aproximar"; etapa_busca = 0;
 
-                                if modo == 4:
-                                    modo = 1 
-                                    alvo = theta_ef
-                                elif modo == 1:
-                                    modo = 2
-                                    alvo = rho_lin
-                                    if abs(theta_ef) > 0.05: # AJUSTAR
-                                        modo = 1
-                                        alvo = theta_ef
-                                    elif abs(theta_volta) > 0.05:
-                                        modo = 1
-                                        alvo = theta_volta
-                                elif modo == 2: 
-                                    modo = 1
-                                    alvo = theta_volta
+                                        x0 = z0 = z_lin = kx = kz = 0.0
+                                    else:
+                                        cont += 1
 
-                                comando = f"{modo} {alvo}"
-                                with command_queue_mutex:
-                                    command_queue.put(comando)
-                                ler_tag = False
-                            else:
-                                cont += 1
-
-                if modo == 4: #MODO DE BUSCA
-                    comando = busca[etapa_busca]
-                    etapa_busca += 1
-                    if etapa_busca > 4:
-                        etapa_busca = 0
+                        # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
+                        estado = estado_anterior if (estado == "ler" and cont == 0) else estado # AJUSTAR CONDIÇÃO
+                    case "buscar":
+                        comando = busca[etapa_busca]
+                        etapa_busca += 1
+                        
+                        with command_queue_mutex:
+                            command_queue.put(comando) 
+                        estado_anterior = "buscar"
+                        estado = "confirmar"                                       
+                        
+                        if etapa_busca > 4:
+                            etapa_busca = 0
+                    case "aproximar":
+                        comando = aprox[etapa_aprox]
+                        etapa_aprox += 1
                     
-                    with command_queue_mutex:
-                        command_queue.put(comando)
-                    ler_tag = False 
-
-                elif time.time() - last_tag > SEARCH_MODE_TIMEOUT: #and abs(x0) > 0.01 and abs(z_lin) > 0.20:
-                    ler_tag = True
-                    modo = 4
-                    last_tag = time.time()
-                    print(f"No tags detected for {SEARCH_MODE_TIMEOUT} seconds, sending search mode command")
-                
-            else:
-                try:
-                    with response_queue_mutex:
-                        msg = response_queue.get_nowait()
-                except queue.Empty:
-                    msg = ""
-                
-                if msg.startswith("fim modo"): 
-                    ler_tag = True
-            
+                        with command_queue_mutex:
+                            command_queue.put(comando)
+                        estado_anterior = "aproximar"
+                        estado = "confirmar"
+                        
+                        if etapa_aprox > 2:
+                            estado = "manual"
+                            etapa_aprox = 0 
+                    case "ideal":
+                        comando = ideal[etapa_ideal]
+                        etapa_ideal += 1
+                        
+                        with command_queue_mutex:
+                            command_queue.put(comando) 
+                        estado_anterior = "ideal"
+                        estado = "confirmar" 
+                    
+                        if etapa_ideal > 4:
+                            etapa_ideal = 0
+                            #estado = "manual"
+                            config.is_autonomous = False
+                    case "confirmar":
+                        try:
+                            with response_queue_mutex:
+                                msg = response_queue.get_nowait()
+                        except queue.Empty:
+                            msg = ""
+                        
+                        if msg.startswith("fim modo"): 
+                            estado = "ler" if estado_anterior != "ideal" else "ideal" 
+                                       
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
-
 
 async def _websocket_sender():
     """Keep one WebSocket open and stream all frames through it."""
