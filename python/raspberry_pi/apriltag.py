@@ -179,6 +179,7 @@ def _vision_worker():
                                     kz += tag.pose_R[2, 2]
 
                                     if cont >= 8:
+                                        print("cont");
                                         x0 /= 9; z0 /= 9; z_lin /= 9; kx /= 9; kz /= 9
 
                                         cont = 0
