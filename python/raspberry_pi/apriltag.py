@@ -277,7 +277,8 @@ def _vision_worker():
                         if etapa_aprox > 2:
                             aprox.clear()
                             config.estado = "manual"
-                            etapa_aprox = 0 
+                            etapa_aprox = 0
+                            etapa_busca = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
                         etapa_ideal += 1
