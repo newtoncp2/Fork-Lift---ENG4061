@@ -284,6 +284,7 @@ def _vision_worker():
 
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
                                         print(pitch)
+                                        print(dist_to_tag)
                                         pitch = 1
                                         if abs(pitch) < 0.2 and dist_to_tag < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
