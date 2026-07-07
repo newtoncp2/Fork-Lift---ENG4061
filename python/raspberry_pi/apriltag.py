@@ -1,3 +1,6 @@
+'''
+    MELHOR VERSÃO POSSÍVEL
+'''
 import os
 import logging
 import numpy as np
