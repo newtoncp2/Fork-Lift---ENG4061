@@ -64,7 +64,7 @@ response_queue_mutex = threading.Lock()
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.2/4}\n",f"1 -{np.pi*1.2/4}\n", f"1 -{np.pi*1.2/4}\n",f"1 -{np.pi*1.2/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 85",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_aprox = 0
@@ -204,7 +204,7 @@ def _vision_worker():
                         if tags:
                             print("TAD_ID : " + str(tag.tag_id))
                             for tag in tags:
-                                if tag.tag_id == 7:   
+                                if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     t = tag.pose_t.flatten()                                
                                     R = tag.pose_R
                                     
