@@ -214,10 +214,10 @@ def _vision_worker():
                                     #kx += tag.pose_R[2, 0]
                                     #kz += tag.pose_R[2, 2]
                                     print("a: " + str(cont))                 
-                                    if cont >= 3:
+                                    if cont >= 5:
                                         print("calculando...")
                                     #    x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
-                                        tmed /= 4
+                                        tmed /= 6
                                         Rmed = media_R(Rs)
                                         
                                         cont = 0
