@@ -184,8 +184,8 @@ def _vision_worker():
 
                                         cont = 0
 
-                                        #rho_lin = np.sqrt(x0**2 + z_lin**2)
-                                        rho_lin = np.linalg.norm(t) - 0.2
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)
+                                        #rho_lin = np.linalg.norm(t) - 0.2
                                         theta_lin = np.arctan2(z_lin, x0)
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = (theta_k/abs(theta_k))*(abs(theta_k) - abs(theta_lin))
