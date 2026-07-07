@@ -210,9 +210,11 @@ def _vision_worker():
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     print("TARGET_ID:" + str(TARGET_TAG_ID[tag_counter]));
-                                    t = tag.pose_t.flatten()                                
-                                    r = tag.pose_R
-
+                                    #t = tag.pose_t.flatten()                                
+                                    #r = tag.pose_R
+                                    r = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
+                                    t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
+                                    
                                     tmed += t
                                     Rs.append(r)
                 
@@ -221,7 +223,54 @@ def _vision_worker():
                                         Rmed = media_R(Rs)
                                         
                                         cont = 0
-                                        
+
+                                        R = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
+                                        t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
+                                    
+                                        # ── Normais ──────────────────────────────────────────────────────────────
+                                    
+                                        # Normal da tag no próprio frame da tag
+                                        tag_normal = np.array([0.0, 0.0, 1.0])
+                                    
+                                        # Direção "frente" da câmera (Z da câmera) expressa no frame da tag
+                                        # R leva tag→câmera, então R.T leva câmera→tag
+                                        cam_normal_in_tag = R.T @ np.array([0.0, 0.0, 1.0])
+                                    
+                                        # ── Ponto alvo P no frame da câmera ──────────────────────────────────────
+                                    
+                                        # P está a `target_dist` ao longo da normal da tag (eixo Z do frame da tag)
+                                        P_tag = np.array([0.0, 0.0, 0.15])
+                                        P_cam = R @ P_tag + t   # P no frame da câmera
+                                    
+                                        # ── Navegação 2-D no plano horizontal (plano XZ da câmera) ───────────────
+                                        # Convenção câmera: X=direita, Y=baixo, Z=frente
+                                        # Ignoramos componente Y (altura) para robôs que se movem em superfície plana.
+                                    
+                                        px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
+                                    
+                                        # rho: distância horizontal até P
+                                        rho = float(np.hypot(px, pz))
+                                    
+                                        # theta_ef: ângulo que o robô deve girar para apontar para P
+                                        #   atan2(x, z) → positivo = vira à esquerda (sentido anti-horário visto de cima)
+                                        theta_ef = float(np.arctan2(px, pz))
+                                    
+                                        # ── theta_volta: ângulo para encarar a tag após chegar em P ──────────────
+                                    
+                                        # A tag fica em t no frame da câmera original.
+                                        # Vetor de P até a tag no plano horizontal:
+                                        dx = t[0] - px
+                                        dz = t[2] - pz
+                                    
+                                        # Ângulo absoluto da tag em relação ao eixo Z da câmera
+                                        angle_to_tag = float(np.arctan2(dx, dz))
+                                    
+                                        # O robô chega em P com heading theta_ef; precisa girar (angle_to_tag - theta_ef)
+                                        theta_volta = angle_to_tag - theta_ef
+                                        # Normaliza para (−π, π]
+                                        theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
+
+                                        '''
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
@@ -242,13 +291,13 @@ def _vision_worker():
                                         if x0 < 0:
                                             theta_lin *= -1
                                             theta_volta *= -1
-                                        '''
                                         if x0 < 0:
                                             z_lin = -z0 + 0.2 / 2
                                             theta_lin = -(np.pi/2 - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                             theta_volta = -(angulo_entre_rad([x0,0,z_lin], [0,0,-1]) - np.pi/4)
                                         elif theta_lin < 0:
                                             theta_volta = theta_volta - np.pi/2 + np.pi/5
+                                        
                                         '''
                                         print(f"x0: {x0}, z0': {z0}, rho_lin {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
