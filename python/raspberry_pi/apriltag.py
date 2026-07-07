@@ -62,7 +62,7 @@ response_queue_mutex = threading.Lock()
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n" f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_busca = 0
@@ -139,7 +139,7 @@ def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
     global cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
-    
+    print(estado)
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
         return
@@ -237,7 +237,7 @@ def _vision_worker():
                         estado_anterior = "buscar"
                         estado = "confirmar"                                       
                         
-                        if etapa_busca > 4:
+                        if etapa_busca > 8:
                             etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
