@@ -164,7 +164,6 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if config.is_autonomous or True: # tirar or 1
-                print(estado)
                 match estado:
                     case "ler":
                         tags = at_detector.detect(
@@ -229,6 +228,7 @@ def _vision_worker():
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
                         estado = estado_anterior if (estado == "ler" and cont == 0) else estado # AJUSTAR CONDIÇÃO
                     case "buscar":
+                        print("buscando...")
                         comando = busca[etapa_busca]
                         etapa_busca += 1
                         
@@ -238,6 +238,7 @@ def _vision_worker():
                         estado = "confirmar"                                       
                         
                         if etapa_busca > 8:
+                            print("reiniciando busca")
                             etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
