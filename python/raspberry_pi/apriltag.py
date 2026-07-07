@@ -173,8 +173,10 @@ def _vision_worker():
                             tag_size=tag_size,
                         )
                         if tags:
+                            print("vi tag")
                             for tag in tags:
-                                if tag.tag_id == TARGET_TAG_ID:    
+                                if tag.tag_id == TARGET_TAG_ID:
+                                    print("minha tag!!")    
                                     t = tag.pose_t.flatten()                                    
                                     r = tag.pose_R
 
