@@ -229,7 +229,7 @@ def _vision_worker():
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
 
-                                        rho_lin = float(np.hypot(px, pz)) / 1.5
+                                        rho_lin = float(np.hypot(px, pz)) / 1.3
                                         #rho_lin = float(np.hypot(px, pz)) / 2
 
                                         theta_lin = float(np.arctan2(px, pz))
@@ -285,7 +285,7 @@ def _vision_worker():
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
                                         print(pitch)
                                         pitch = 1
-                                        if abs(pitch) < 0.2 and dist_to_tag < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
+                                        if abs(pitch) < 0.02 and dist_to_tag < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
