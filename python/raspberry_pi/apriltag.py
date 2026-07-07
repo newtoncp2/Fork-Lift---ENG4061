@@ -68,6 +68,7 @@ stop_event = threading.Event()
 
 # Global variables
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
+
 aprox = ["","",""]
 ideal = ["3 85",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_aprox = 0
@@ -170,7 +171,7 @@ def media_R(Rs):
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior, tag_counter
+    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior, tag_counter, etapa_ajustar
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -219,18 +220,12 @@ def _vision_worker():
                                         
                                         cont = 0
                                         
-                                        #rot = R.from_matrix(Rmed)
-                                        #yaw, pitch, roll = rot.as_euler('zyx', degrees=False)
-
-                                        #theta_lin = -pitch
-                                        #theta_volta = -(theta_lin/abs(theta_lin))*np.pi/2
-
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
                                         
                                         posicao_camera = -Rmed.T @ tmed   
-                                                                            
+                                                                    
                                         x0 = posicao_camera[0]
                                         z0 = posicao_camera[2] / 2
                                         z_lin = z0 - 0.2 / 2
@@ -251,9 +246,10 @@ def _vision_worker():
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
 
-                                        #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
-                                        if x0 < 0.13 and rho_lin < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
-                                        else: config.estado = "aproximar"; config.etapa_busca = 0;
+                                        _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
+                                        print(pitch)
+                                        if pitch < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
                                     else:
@@ -284,7 +280,7 @@ def _vision_worker():
                         
                         if etapa_aprox > 2:
                             aprox.clear()
-                            config.estado = "ler"
+                            config.estado = "ajustar"
                             etapa_aprox = 0
                             etapa_busca = 0 
                     case "ideal":
