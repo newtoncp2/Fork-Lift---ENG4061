@@ -233,7 +233,7 @@ def _vision_worker():
                                         z_lin = z0 - 0.2 / 2
 
                                         if x0 < 0:
-                                            z0 = -z0
+                                            x0 = -x0
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)*0.9
                                     
@@ -242,6 +242,10 @@ def _vision_worker():
                                             
                                         if theta_lin < 0:
                                             theta_volta = theta_volta - np.pi/2 + np.pi/5
+                                        
+                                        if x0 < 0:
+                                            theta_lin = -theta_lin
+                                            theta_volta = -theta_volta
                                         
                                         print(f"x0: {x0}, z0': {z0}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
