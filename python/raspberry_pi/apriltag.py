@@ -66,7 +66,7 @@ stop_event = threading.Event()
 # Global variables
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.2/4}\n",f"1 -{np.pi*1.2/4}\n", f"1 -{np.pi*1.2/4}\n",f"1 -{np.pi*1.2/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
-ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
+ideal = ["3 85",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_aprox = 0
 etapa_ideal = 0
 estado_anterior = "buscar"
@@ -279,15 +279,15 @@ def _vision_worker():
                             config.estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
-                        #comando = ideal[etapa_ideal]
-                        #etapa_ideal += 1
+                        comando = ideal[etapa_ideal]
+                        etapa_ideal += 1
                        
-                        #with command_queue_mutex:
-                        #    command_queue.put(comando) 
-                        #estado_anterior = "ideal"
-                        #config.estado = "confirmar" 
+                        with command_queue_mutex:
+                            command_queue.put(comando) 
+                        estado_anterior = "ideal"
+                        config.estado = "confirmar" 
                     
-                        if etapa_ideal > 4:
+                        if etapa_ideal > 13:
                             tag_counter += 1 if tag_counter < len(TARGET_TAG_ID) else 0
                             etapa_ideal = 0
                             estado = "ler"
