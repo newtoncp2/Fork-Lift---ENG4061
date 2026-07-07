@@ -157,7 +157,6 @@ def _vision_worker():
             with frame_queue_mutex:
                 frame = frame_queue.get_nowait()
         except queue.Empty:
-            print(estado)
             logger.warning("No frame on queue")
             continue     
         
@@ -209,7 +208,7 @@ def _vision_worker():
                                         z0 = posicao_camera[2]
                                         
                                         z_lin = z0 - 0.2
-
+                                        
                                         theta_lin = angulo_entre_rad(n_cam_tag_space,[x0,z_lin]) # INVERTER SE GIRAR PRO LADO ERRADO
                                         theta_volta = angulo_entre_rad([x0,z_lin],[0,-1])
 
@@ -220,7 +219,7 @@ def _vision_worker():
                                         aprox = [f"1 {theta_lin}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
-                                        if x0 < 0.00013 and rho_lin < 0.00002: estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        if x0 < 0.00013 and rho_lin < 0.00002: estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: estado = "aproximar"; etapa_busca = 0;
 
                                         x0 = z0 = z_lin = kx = kz = 0.0
@@ -274,7 +273,7 @@ def _vision_worker():
                         
                         if msg.startswith("fim modo"): 
                             estado = "ler" if estado_anterior != "ideal" else "ideal" 
-                                       
+
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
 
