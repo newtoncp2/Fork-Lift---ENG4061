@@ -192,6 +192,7 @@ def _vision_worker():
                                     #kz += tag.pose_R[2, 2]
                                                                         
                                     if cont >= 3:
+                                        print("calculando...")
                                     #    x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
                                         Rmed /= 4; tmed /= 4
 
@@ -223,12 +224,12 @@ def _vision_worker():
 
                                         x0 = z0 = z_lin = kx = kz = 0.0
                                     else:
+                                        print(cont)
                                         cont += 1
 
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
                         estado = estado_anterior if (estado == "ler" and cont == 0) else estado # AJUSTAR CONDIÇÃO
                     case "buscar":
-                        print("buscando...")
                         comando = busca[etapa_busca]
                         etapa_busca += 1
                         
@@ -238,7 +239,6 @@ def _vision_worker():
                         estado = "confirmar"                                       
                         
                         if etapa_busca > 7:
-                            print("reiniciando busca")
                             etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
