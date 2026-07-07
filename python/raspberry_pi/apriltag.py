@@ -163,7 +163,7 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if config.is_autonomous or True: # tirar or 1
+            if config.is_autonomous: # tirar or 1
                 match estado:
                     case "ler":
                         tags = at_detector.detect(
@@ -212,7 +212,7 @@ def _vision_worker():
                                         theta_volta = angulo_entre_rad([x0,z_lin],[0,-1])
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)/4
-                                               
+
                                         print(f"rho': {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {rho_lin}", f"1 {theta_volta}"] 
