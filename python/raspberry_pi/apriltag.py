@@ -240,7 +240,7 @@ def _vision_worker():
 
                                         print(f"rho': {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
-                                        aprox = [f"1 {theta_lin}",f"2 {rho_lin}", f"1 {theta_volta}"] 
+                                        aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
                                         if x0 < 0.13 and rho_lin < 0.2: estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
