@@ -165,7 +165,7 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if config.is_autonomous: # tirar or 1
+            if config.is_autonomous or True: # tirar or 1
                 match estado:
                     case "ler":
                         tags = at_detector.detect(
