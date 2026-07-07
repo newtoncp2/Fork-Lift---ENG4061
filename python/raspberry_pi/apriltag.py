@@ -249,7 +249,7 @@ def _vision_worker():
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
                                     
                                         # rho: distância horizontal até P
-                                        rho = float(np.hypot(px, pz))
+                                        rho_lin = float(np.hypot(px, pz))
                                     
                                         # theta_ef: ângulo que o robô deve girar para apontar para P
                                         #   atan2(x, z) → positivo = vira à esquerda (sentido anti-horário visto de cima)
