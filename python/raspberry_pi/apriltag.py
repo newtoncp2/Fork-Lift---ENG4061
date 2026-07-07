@@ -64,7 +64,7 @@ response_queue_mutex = threading.Lock()
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n" f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_aprox = 0
