@@ -123,6 +123,32 @@ def _capture_worker():
             _put_latest(ws_queue, ws_queue_mutex, encoded_frame.tobytes())   
 
 
+def alignment_angles(R, t, approach_dist=0.20):
+    # Normal da tag no frame da câmera (aponta da tag para a câmera)
+    normal = R[:, 2]
+
+    # Ponto alvo: 20cm à frente da tag ao longo da normal
+    # normal aponta da tag → câmera, então subtraímos para ir da câmera → tag
+    target = t - approach_dist * normal
+    
+    # ── Rotação 1: girar para encarar o ponto alvo ──
+    theta_to_target = np.arctan2(target[0], target[2])
+
+    # ── Rotação 2: após chegar no alvo, girar para ficar de frente à tag ──
+    # A direção final desejada é oposta à normal (câmera olha para a tag)
+    theta_normal = np.arctan2(-normal[0], -normal[2])
+
+    # A 2ª rotação é a diferença entre orientação final e orientação após mover
+    theta_second = theta_normal - theta_to_target
+
+    distance_to_target = np.linalg.norm(target)
+
+    return {
+        "theta_ef":  round(theta_to_target, 2),  # 1ª rotação
+        "rho_lin": round(distance_to_target, 4),  # distância até o alvo
+        "theta_volta":     round(theta_second, 2),     # 2ª rotação (após chegar)
+    }
+
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
@@ -164,27 +190,40 @@ def _vision_worker():
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:    
                                     t = tag.pose_t.flatten()
-    
-                                    x0 += t[0]
-                                    z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
-                                    z_lin += z0 - 0.25 #
+                                    r = tag.pose_r.flatten()
 
-                                    kx += tag.pose_R[2, 0]
-                                    kz += tag.pose_R[2, 2]
+                                    R, _ = cv2.Rodrigues(np.array(r))
+                                    t = np.array(t).flatten()
 
+                                    params = alignment_angles(R,t)
+
+                                    theta_ef += params["theta_ef"]
+                                    rho_lin += params["rho_lin"]
+                                    theta_volta += params["theta_volta"]
+                                    #x0 += t[0] 
+                                    #z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    #z_lin += z0 - 0.25 #
+
+                                    #kx += tag.pose_R[2, 0]
+                                    #kz += tag.pose_R[2, 2]
+                                                                        
                                     if cont >= 3:
-                                        x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
+                                        #x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
 
                                         cont = 0
                                        
-                                        rho_lin = np.sqrt(x0**2 + z_lin**2)/4
-                                        theta_lin = np.arctan2(z_lin, x0)  
-                                        theta_k = np.arctan2(kz, kx)       
-                                        theta_ef = theta_k - theta_lin    
-                                        theta_volta = -(abs(theta_k)-np.pi/4) 
+                                        #rho_lin = np.sqrt(x0**2 + z_lin**2)/4
+                                        #theta_lin = np.arctan2(z_lin, x0)  
+                                        #theta_k = np.arctan2(kz, kx)       
+                                        #theta_ef = theta_k - theta_lin    
+                                        #theta_volta = -(abs(theta_k)-np.pi/4) 
+                                        
+                                        theta_ef /= 4
+                                        theta_volta /= 4
+                                        rho_lin /= 4
 
-                                        print(f"x0: {x0}, rho': {rho_lin}")
-                                        print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
+                                        print(f"rho': {rho_lin}")
+                                        print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
