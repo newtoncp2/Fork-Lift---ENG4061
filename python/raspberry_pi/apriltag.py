@@ -202,8 +202,8 @@ def _vision_worker():
                             tag_size=tag_size,
                         )
                         if tags:
-                            print("TAD_ID : " + str(tag.tag_id))
                             for tag in tags:
+                                print("TAD_ID : " + str(tag.tag_id))
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     t = tag.pose_t.flatten()                                
                                     R = tag.pose_R
