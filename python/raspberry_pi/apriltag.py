@@ -76,13 +76,13 @@ tmed = np.zeros(3)
 cont = 0
 
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
-TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [2, 8])
+TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [7, 8])
 tag_counter = 0
 try:
     TARGET_TAG_ID = json.loads(TARGET_TAG_ID)
 except (ValueError, TypeError):
     logger.warning(f"Invalid TARGET_TAG_ID: {TARGET_TAG_ID}")
-    TARGET_TAG_ID = [2, 8]
+    TARGET_TAG_ID = [7, 8]
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
@@ -202,7 +202,7 @@ def _vision_worker():
                             tag_size=tag_size,
                         )
                         if tags:
-            
+                            print("TAD_ID : " + str(tag.tag_id))
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:   
                                     t = tag.pose_t.flatten()                                
