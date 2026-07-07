@@ -313,7 +313,7 @@ def _vision_worker():
                         try:
                             with response_queue_mutex:
                                 msg = response_queue.get_nowait()
-                        except queue.Empty:
+                        except:
                             msg = ""
 
                         if msg.startswith("fim modo"): 
