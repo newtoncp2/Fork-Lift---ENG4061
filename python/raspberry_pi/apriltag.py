@@ -228,7 +228,7 @@ def _vision_worker():
                                         t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
                                                                         
                                         # P está a `target_dist` ao longo da normal da tag (eixo Z do frame da tag)
-                                        P_tag = np.array([0.0, 0.0, 0.015])
+                                        P_tag = np.array([0.0, 0.0, 0.15])
                                         P_cam = R @ P_tag + t   # P no frame da câmera
                                     
                                         # ── Navegação 2-D no plano horizontal (plano XZ da câmera) ───────────────
