@@ -206,13 +206,12 @@ def _vision_worker():
                         )
                         if tags:
                             for tag in tags:
-                                print("TAD_ID : " + str(tag.tag_id))
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     t = tag.pose_t.flatten()                                
-                                    R = tag.pose_R
-                                    
+                                    r = tag.pose_R
+
                                     tmed += t
-                                    Rs.append(R)
+                                    Rs.append(r)
                 
                                     if cont >= 5:
                                         tmed /= 6
@@ -220,18 +219,26 @@ def _vision_worker():
                                         
                                         cont = 0
                                         
+                                        rot = R.from_matrix(Rmed)
+                                        yaw, pitch, roll = rot.as_euler('zyx', degrees=False)
+
+                                        theta_lin = pitch
+                                        theta_volta = -pitch
+                                        
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
                                         
                                         posicao_camera = -Rmed.T @ tmed   
-
+                                        
+                                        #center = tag.center.astype(np.int32)
+                                        
                                         x0 = posicao_camera[0]
                                         z0 = posicao_camera[2] / 2
                                         z_lin = z0 - 0.2 / 2
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)*0.7
-                                        
+                                        '''                                        
                                         theta_lin = -(np.pi - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                         theta_volta = np.pi - angulo_entre_rad([0,0,-1], [x0,0,z_lin])
                                                      
@@ -241,6 +248,7 @@ def _vision_worker():
                                             theta_volta = -(angulo_entre_rad([x0,0,z_lin], [0,0,-1]) - np.pi/4)
                                         elif theta_lin < 0:
                                             theta_volta = theta_volta - np.pi/2 + np.pi/5
+                                        '''
 
                                         print(f"x0: {x0}, z0': {z0}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
