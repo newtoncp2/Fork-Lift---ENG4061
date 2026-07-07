@@ -235,7 +235,6 @@ def _vision_worker():
 
                                         theta_lin = -(np.pi - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                         theta_volta = -angulo_entre_rad([x0,0,z_lin], [0,0,-1])
-                                        theta_lin = -theta_lin if x0 < 0 else theta_lin
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)*0.9
 
