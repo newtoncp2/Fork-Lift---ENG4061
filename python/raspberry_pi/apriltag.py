@@ -210,8 +210,6 @@ def _vision_worker():
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     print("TARGET_ID:" + str(TARGET_TAG_ID[tag_counter]));
-                                    #t = tag.pose_t.flatten()                                
-                                    #r = tag.pose_R
                                     r = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
                                     t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
                                     
@@ -223,13 +221,10 @@ def _vision_worker():
                                         Rmed = media_R(Rs)
                                         
                                         cont = 0
-
-                                        R = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
-                                        t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
                                                                         
                                         # P está a `target_dist` ao longo da normal da tag (eixo Z do frame da tag)
-                                        P_tag = np.array([0.0, 0.0, 0.15])
-                                        P_cam = R @ P_tag + t   # P no frame da câmera
+                                        P_tag = np.array([0.0, 0.0, -0.15])
+                                        P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                     
                                         # ── Navegação 2-D no plano horizontal (plano XZ da câmera) ───────────────
                                         # Convenção câmera: X=direita, Y=baixo, Z=frente
@@ -248,8 +243,8 @@ def _vision_worker():
                                     
                                         # A tag fica em t no frame da câmera original.
                                         # Vetor de P até a tag no plano horizontal:
-                                        dx = t[0] - px
-                                        dz = t[2] - pz
+                                        dx = tmed[0] - px
+                                        dz = tmed[2] - pz
                                     
                                         # Ângulo absoluto da tag em relação ao eixo Z da câmera
                                         angle_to_tag = float(np.arctan2(dx, dz))
