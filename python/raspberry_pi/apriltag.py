@@ -280,7 +280,7 @@ def _vision_worker():
                         
                         if etapa_aprox > 2:
                             aprox.clear()
-                            config.estado = "ajustar"
+                            config.estado = "ler"
                             etapa_aprox = 0
                             etapa_busca = 0 
                     case "ideal":
