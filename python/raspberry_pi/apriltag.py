@@ -204,7 +204,7 @@ def _vision_worker():
                         if tags:
                             print("TAD_ID : " + str(tag.tag_id))
                             for tag in tags:
-                                if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
+                                if tag.tag_id == 7:   
                                     t = tag.pose_t.flatten()                                
                                     R = tag.pose_R
                                     
