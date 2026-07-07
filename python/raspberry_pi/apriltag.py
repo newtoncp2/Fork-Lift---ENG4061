@@ -70,7 +70,7 @@ stop_event = threading.Event()
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 
 aprox = ["","",""]
-ideal = ["3 85",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
+ideal = ["3 55",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_aprox = 0
 etapa_ideal = 0
 estado_anterior = "buscar"
@@ -256,7 +256,7 @@ def _vision_worker():
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
                                         print(pitch)
 
-                                        if abs(pitch) < 0.2 and rho_lin < 50: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
+                                        if abs(pitch) < 0.2 and rho_lin < 0.8: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
