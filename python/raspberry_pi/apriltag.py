@@ -76,13 +76,13 @@ tmed = np.zeros(3)
 cont = 0
 
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
-TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [7, 8])
+TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [0, 8])
 tag_counter = 0
 try:
     TARGET_TAG_ID = json.loads(TARGET_TAG_ID)
 except (ValueError, TypeError):
     logger.warning(f"Invalid TARGET_TAG_ID: {TARGET_TAG_ID}")
-    TARGET_TAG_ID = [7, 8]
+    TARGET_TAG_ID = [0, 8]
 
 logger.info("starting mqtt...")
 # create and start the mqtt client (connection attempt is non-fatal)
@@ -204,7 +204,7 @@ def _vision_worker():
                         if tags:
                             print("TAD_ID : " + str(tag.tag_id))
                             for tag in tags:
-                                if tag.tag_id == TARGET_TAG_ID:   
+                                if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     t = tag.pose_t.flatten()                                
                                     R = tag.pose_R
                                     
@@ -275,18 +275,20 @@ def _vision_worker():
                         config.estado = "confirmar"
                         
                         if etapa_aprox > 2:
+
                             config.estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
-                        comando = ideal[etapa_ideal]
-                        etapa_ideal += 1
+                        #comando = ideal[etapa_ideal]
+                        #etapa_ideal += 1
                         
-                        with command_queue_mutex:
-                            command_queue.put(comando) 
-                        estado_anterior = "ideal"
-                        config.estado = "confirmar" 
+                        #with command_queue_mutex:
+                        #    command_queue.put(comando) 
+                        #estado_anterior = "ideal"
+                        #config.estado = "confirmar" 
                     
                         if etapa_ideal > 4:
+                            tag_counter += 1 if tag_counter < len(TARGET_TAG_ID) else 0
                             etapa_ideal = 0
                             estado = "ler"
                             estado_anterior = "buscar"
