@@ -42,7 +42,7 @@ at_detector = Detector(
 
 def on_connect(client, userdata, flags, rc):
     print("Conectado com código:", rc)
-    client.subscribe("empilhadeira/controle")  # assina o tópico ao conectar
+    client.subscribe("empilhadeira/controle12321")  # assina o tópico ao conectar
 
 
 def on_message(client, userdata, msg):
@@ -81,7 +81,7 @@ def menu():
         print("Velocidade: ", velocidade)
         print("modo: ", modo)
         retorno = client.publish(
-            "empilhadeira/controle", json.dumps(dados), qos=0, retain=False
+            "empilhadeira/controle12321", json.dumps(dados), qos=0, retain=False
         )
         print("Publicou com retorno:", retorno)
 

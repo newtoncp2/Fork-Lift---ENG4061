@@ -91,7 +91,7 @@ mqtt_client = create_and_start_mqtt(
     mqtt_password,
     mqtt_host,
     mqtt_port,
-    on_connect=make_on_connect(["empilhadeira/controle"]),
+    on_connect=make_on_connect(["empilhadeira/controle12321"]),
     on_message=make_on_message(ser),
 )
 mqtt_client.user_data_set({"command_queue": command_queue, "command_queue_mutex": command_queue_mutex})
