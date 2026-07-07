@@ -7,6 +7,7 @@ import threading
 import time
 from .config import config
 from .setup import setup_resources
+from scipy.spatial.transform import Rotation as R
 from .connections import (
     create_and_start_mqtt,
     safe_disconnect,
@@ -71,9 +72,10 @@ etapa_ideal = 0
 estado = "buscar" # AJUSTAR PARA "manual"
 estado_anterior = "buscar"
 x0, z0, z_lin = 0.0, 0.0, 0.0
-Rmed = np.eye(3)
-tmed = np.array([0,0,0])
+Rs = []
+tmed = np.zeros(3)
 cont = 0
+
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
 TARGET_TAG_ID = int(os.getenv("TARGET_TAG_ID", "0"))
 
@@ -137,6 +139,27 @@ def angulo_entre_rad(v1,v2):
     
     return np.arccos(cos_angulo)
 
+
+def media_R(Rs):
+    """
+    Calcula a média de múltiplas matrizes de rotação usando quaternions.
+    """
+    quaternions = []
+    
+    for R_mat in Rs:
+        # Converte matriz para quaternion
+        r = R.from_matrix(R_mat)
+        quat = r.as_quat()  # [x, y, z, w]
+        quaternions.append(quat)
+    
+    # Média dos quaternions (com normalização)
+    quat_medio = np.mean(quaternions, axis=0)
+    quat_medio = quat_medio / np.linalg.norm(quat_medio)  # Normaliza
+    
+    # Converte de volta para matriz
+    r_medio = R.from_quat(quat_medio)
+    return r_medio.as_matrix()
+
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
@@ -183,7 +206,7 @@ def _vision_worker():
                                     R = tag.pose_R
                                     
                                     tmed += t
-                                    Rmed += R
+                                    Rs.append(R)
                                     #x0 += t[0]
                                     #z0 += t[2]
                                     #z_lin += z0 - 0.25 #
@@ -194,8 +217,9 @@ def _vision_worker():
                                     if cont >= 3:
                                         print("calculando...")
                                     #    x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
-                                        Rmed /= 4; tmed /= 4
-
+                                        tmed /= 4
+                                        Rmed = media_R(Rs)
+                                        
                                         cont = 0
                                         
                                         n_cam_cam_space = np.array([0, 0, 1])
