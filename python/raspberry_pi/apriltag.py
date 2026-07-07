@@ -190,7 +190,7 @@ def _vision_worker():
 
                                     #kx += tag.pose_R[2, 0]
                                     #kz += tag.pose_R[2, 2]
-                                                                        
+                                    print("a: " + str(cont))                 
                                     if cont >= 3:
                                         print("calculando...")
                                     #    x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
