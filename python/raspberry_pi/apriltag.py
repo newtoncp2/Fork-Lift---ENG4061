@@ -122,32 +122,18 @@ def _capture_worker():
         if ret:
             _put_latest(ws_queue, ws_queue_mutex, encoded_frame.tobytes())   
 
-
-def alignment_angles(R, t, approach_dist=0.20):
-    # Normal da tag no frame da câmera (aponta da tag para a câmera)
-    normal = R[:, 2]
-
-    # Ponto alvo: 20cm à frente da tag ao longo da normal
-    # normal aponta da tag → câmera, então subtraímos para ir da câmera → tag
-    target = t - approach_dist * normal
+def angulo_entre_rad(v1,v2):
+    v1 = np.array(v1, dtype=float)
+    v2 = np.array(v2, dtype=float)
     
-    # ── Rotação 1: girar para encarar o ponto alvo ──
-    theta_to_target = np.arctan2(target[0], target[2])
-
-    # ── Rotação 2: após chegar no alvo, girar para ficar de frente à tag ──
-    # A direção final desejada é oposta à normal (câmera olha para a tag)
-    theta_normal = np.arctan2(-normal[0], -normal[2])
-
-    # A 2ª rotação é a diferença entre orientação final e orientação após mover
-    theta_second = theta_normal - theta_to_target
-
-    distance_to_target = np.linalg.norm(target)
-
-    return {
-        "theta_ef":  round(theta_to_target, 2),  # 1ª rotação
-        "rho_lin": round(distance_to_target, 4),  # distância até o alvo
-        "theta_volta":     round(theta_second, 2),     # 2ª rotação (após chegar)
-    }
+    produto_escalar = np.dot(v1, v2)
+    
+    norma_v1 = np.linalg.norm(v1)
+    norma_v2 = np.linalg.norm(v2)
+    
+    cos_angulo = np.clip(produto_escalar / (norma_v1 * norma_v2), -1.0, 1.0)
+    
+    return np.arccos(cos_angulo)
 
 def _vision_worker():
     """Process frames for tags if detector is available."""
@@ -194,12 +180,8 @@ def _vision_worker():
 
                                     R, _ = cv2.Rodrigues(np.array(r))
                                     
-                                    normal = R[:, 2]
-                                    target = t - 0.2 * normal
-                                    
-                                    x0 += target[0] 
-                                    z0 += target[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
-                                    z_lin += z0 - 0.2
+                                    tmed += t
+                                    Rmed += R
                                     #x0 += t[0]
                                     #z0 += t[2]
                                     #z_lin += z0 - 0.25 #
@@ -208,19 +190,30 @@ def _vision_worker():
                                     #kz += tag.pose_R[2, 2]
                                                                         
                                     if cont >= 3:
-                                        x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
- 
-                                        cont = 0
-                                       
-                                        rho_lin = np.sqrt(x0**2 + z_lin**2)/4
-                                        theta_lin = np.arctan2(z0, x0)  
-                                        theta_k = np.arctan2(z_lin, x0)       
-                                        theta_ef = theta_k - theta_lin    
-                                        theta_volta = -(abs(theta_k)-np.pi/4) 
+                                    #    x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
+                                        Rmed /= 4; tmed /= 4
 
+                                        cont = 0
+                                        
+                                        n_cam_cam_space = np.array([0, 0, 1])
+                                        n_cam_tag_space = Rmed.T @ n_cam_cam_space
+                                        n_cam_tag_space[1] = 0
+                                        
+                                        posicao_camera = -Rmed.T @ tmed   
+
+                                        x0 = posicao_camera[0]
+                                        z0 = posicao_camera[2]
+                                        
+                                        z_lin = z0 - 0.2
+
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space,[x0,z_lin]) # INVERTER SE GIRAR PRO LADO ERRADO
+                                        theta_volta = angulo_entre_rad([x0,z_lin],[0,-1])
+
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)/4
+                                               
                                         print(f"rho': {rho_lin}")
-                                        print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
-                                        aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
+                                        print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
+                                        aprox = [f"1 {theta_lin}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
                                         if x0 < 0.13 and rho_lin < 0.2: estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
