@@ -292,7 +292,7 @@ def _vision_worker():
                         estado_anterior = "ideal"
                         config.estado = "confirmar" 
                     
-                        if etapa_ideal > 6:
+                        if etapa_ideal > 7:
                             tag_counter += 1 if tag_counter < len(TARGET_TAG_ID) else 0
                             etapa_ideal = 0
                             estado = "ler"
