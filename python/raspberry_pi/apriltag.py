@@ -64,7 +64,7 @@ response_queue_mutex = threading.Lock()
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n" f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n" f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_busca = 0
@@ -264,12 +264,12 @@ def _vision_worker():
                         estado_anterior = "buscar"
                         config.estado = "confirmar"                                       
                         
-                        if etapa_busca >= 7:
+                        if etapa_busca > 7:
                             etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
                         etapa_aprox += 1
-                    
+
                         with command_queue_mutex:
                             command_queue.put(comando)
                         estado_anterior = "aproximar"
