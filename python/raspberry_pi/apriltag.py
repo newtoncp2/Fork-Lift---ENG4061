@@ -223,7 +223,7 @@ def _vision_worker():
                                         cont = 0
                                                                         
                                         # P está a `target_dist` ao longo da normal da tag (eixo Z do frame da tag)
-                                        P_tag = np.array([0.0, 0.0, -0.15])
+                                        P_tag = np.array([0.0, 0.0, 0.35])
                                         P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                     
                                         # ── Navegação 2-D no plano horizontal (plano XZ da câmera) ───────────────
@@ -233,7 +233,7 @@ def _vision_worker():
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
                                     
                                         # rho: distância horizontal até P
-                                        rho_lin = float(np.hypot(px, pz))
+                                        rho_lin = float(np.hypot(px, pz)) / 2
                                     
                                         # theta_ef: ângulo que o robô deve girar para apontar para P
                                         #   atan2(x, z) → positivo = vira à esquerda (sentido anti-horário visto de cima)
