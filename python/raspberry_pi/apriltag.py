@@ -239,7 +239,7 @@ def _vision_worker():
                                                      
                                         if x0 < 0:
                                             z_lin = -z0 + 0.2 / 2
-                                            theta_lin = np.pi/2 - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin])
+                                            theta_lin = -(np.pi/2 - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                             theta_volta = -(angulo_entre_rad([0,0,-1], [x0,0,z_lin]) + np.pi/4)
                                         elif theta_lin < 0:
                                             theta_volta = theta_volta - np.pi/2 + np.pi/5
