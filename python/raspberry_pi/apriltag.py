@@ -190,7 +190,7 @@ def _vision_worker():
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:    
                                     t = tag.pose_t.flatten()
-                                    r = tag.pose_R.flatten()
+                                    r = tag.pose_R
 
                                     R, _ = cv2.Rodrigues(np.array(r))
                                     t = np.array(t).flatten()
