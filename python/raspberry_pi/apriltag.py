@@ -64,7 +64,7 @@ response_queue_mutex = threading.Lock()
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.2/4}\n",f"1 -{np.pi*1.2/4}\n", f"1 -{np.pi*1.2/4}\n",f"1 -{np.pi*1.2/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_aprox = 0
@@ -275,13 +275,13 @@ def _vision_worker():
                         config.estado = "confirmar"
                         
                         if etapa_aprox > 2:
-
+                    
                             config.estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
                         #comando = ideal[etapa_ideal]
                         #etapa_ideal += 1
-                        
+                       
                         #with command_queue_mutex:
                         #    command_queue.put(comando) 
                         #estado_anterior = "ideal"
@@ -299,7 +299,7 @@ def _vision_worker():
                                 msg = response_queue.get_nowait()
                         except queue.Empty:
                             msg = ""
-                        
+
                         if msg.startswith("fim modo"): 
                             config.estado = "ler" if estado_anterior != "ideal" else "ideal" 
 
