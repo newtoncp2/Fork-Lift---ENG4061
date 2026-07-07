@@ -12,6 +12,10 @@ class AppState:
     @property
     def estado(self):
         return self._estado
+    
+    @property
+    def etapa_busca(self):
+        return self._etapa_busca
 
     @is_autonomous.setter
     def is_autonomous(self, value):
