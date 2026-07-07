@@ -241,7 +241,7 @@ def _vision_worker():
                                         if theta_lin < 0:
                                             theta_volta = np.pi/2 - theta_volta
                                         
-                                        print(f"rho': {rho_lin}")
+                                        print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
 
