@@ -171,7 +171,7 @@ def media_R(Rs):
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior, tag_counter, etapa_ajustar
+    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_aprox, etapa_ideal, estado_anterior, tag_counter
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -197,7 +197,7 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if config.is_autonomous:  # tirar or 1
-                print(estado)
+                print(config.estado)
                 match config.estado:
                     case "ler":
                         tags = at_detector.detect(
@@ -304,7 +304,7 @@ def _vision_worker():
                         if etapa_ideal > 7:
                             tag_counter += 1 if tag_counter < len(TARGET_TAG_ID) else 0
                             etapa_ideal = 0
-                            estado = "ler"
+                            config.estado = "ler"
                             estado_anterior = "buscar"
                             config.is_autonomous = False
                     case "confirmar":
