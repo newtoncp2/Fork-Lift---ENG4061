@@ -222,38 +222,22 @@ def _vision_worker():
                                         
                                         cont = 0
                                                                         
-                                        # P está a `target_dist` ao longo da normal da tag (eixo Z do frame da tag)
                                         P_tag = np.array([0.0, 0.0, 0.35])
                                         P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
-                                    
-                                        # ── Navegação 2-D no plano horizontal (plano XZ da câmera) ───────────────
-                                        # Convenção câmera: X=direita, Y=baixo, Z=frente
-                                        # Ignoramos componente Y (altura) para robôs que se movem em superfície plana.
-                                    
+                                                           
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
-                                    
-                                        # rho: distância horizontal até P
+                       
                                         rho_lin = float(np.hypot(px, pz)) / 2
                                     
-                                        # theta_ef: ângulo que o robô deve girar para apontar para P
-                                        #   atan2(x, z) → positivo = vira à esquerda (sentido anti-horário visto de cima)
                                         theta_lin = float(np.arctan2(px, pz))
                                     
-                                        # ── theta_volta: ângulo para encarar a tag após chegar em P ──────────────
-                                    
-                                        # A tag fica em t no frame da câmera original.
-                                        # Vetor de P até a tag no plano horizontal:
                                         dx = tmed[0] - px
                                         dz = tmed[2] - pz
                                     
-                                        # Ângulo absoluto da tag em relação ao eixo Z da câmera
                                         angle_to_tag = float(np.arctan2(dx, dz))
                                     
-                                        # O robô chega em P com heading theta_ef; precisa girar (angle_to_tag - theta_ef)
-                                        theta_volta = angle_to_tag - theta_lin
-                                        # Normaliza para (−π, π]
-                                        #theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
-
+                                        theta_volta = angle_to_tag #- theta_lin
+                                        
                                         '''
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
@@ -299,7 +283,7 @@ def _vision_worker():
 
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
                         config.estado = estado_anterior if (config.estado == "ler" and cont == 0) else config.estado
-                        if config.estado == "aproximar" and etapa_aprox != 0: config.estado = "aproximar"
+                        #if config.estado == "aproximar" and etapa_aprox != 0: config.estado = "aproximar"
                     case "buscar":
                         comando = busca[config.etapa_busca]
                         config.etapa_busca += 1
