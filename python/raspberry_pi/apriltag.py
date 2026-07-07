@@ -225,7 +225,6 @@ def _vision_worker():
                                         dist_to_tag = float(np.linalg.norm(tmed))
                                         P_cam = t * (dist_to_tag - 0.45) / dist_to_tag
 
-                                        P_tag = np.array([0.0, 0.0, 0.45])
                                         #P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
@@ -283,10 +282,10 @@ def _vision_worker():
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
 
-                                        #_, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
-                                        #print(pitch)
+                                        _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
+                                        print(pitch)
                                         pitch = 1
-                                        if abs(pitch) < 0.2 and rho_lin < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
+                                        if abs(pitch) < 0.2 and dist_to_tag < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
