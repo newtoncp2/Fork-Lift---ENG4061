@@ -189,38 +189,34 @@ def _vision_worker():
                         if tags:
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:    
-                                    t = tag.pose_t.flatten()
-                                    #r = tag.pose_R
+                                    t = tag.pose_t.flatten()                                    
+                                    r = tag.pose_R
 
-                                    #R, _ = cv2.Rodrigues(np.array(r))
-                                    #t = np.array(t).flatten()
+                                    R, _ = cv2.Rodrigues(np.array(r))
+                                    
+                                    normal = R[:, 2]
+                                    target = t - 0.2 * normal
+                                    
+                                    x0 += target[0] 
+                                    z0 += target[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    z_lin += z0 - 0.2
+                                    #x0 += t[0]
+                                    #z0 += t[2]
+                                    #z_lin += z0 - 0.25 #
 
-                                    #params = alignment_angles(R,t)
-
-                                    #theta_ef += params["theta_ef"]
-                                    #rho_lin += params["rho_lin"]
-                                    #theta_volta += params["theta_volta"]
-                                    x0 += t[0] 
-                                    z0 += t[2] # ajuste de calibração POSSÍVEL: dividir por 2.8
-                                    z_lin += z0 - 0.25 #
-
-                                    kx += tag.pose_R[2, 0]
-                                    kz += tag.pose_R[2, 2]
+                                    #kx += tag.pose_R[2, 0]
+                                    #kz += tag.pose_R[2, 2]
                                                                         
                                     if cont >= 3:
                                         x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
-
+ 
                                         cont = 0
                                        
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)/4
-                                        theta_lin = np.arctan2(z_lin, x0)  
-                                        theta_k = np.arctan2(kz, kx)       
+                                        theta_lin = np.arctan2(z0, x0)  
+                                        theta_k = np.arctan2(z_lin, x0)       
                                         theta_ef = theta_k - theta_lin    
                                         theta_volta = -(abs(theta_k)-np.pi/4) 
-
-                                        #theta_ef /= 4
-                                        #theta_volta /= 4
-                                        #rho_lin /= 4
 
                                         print(f"rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
