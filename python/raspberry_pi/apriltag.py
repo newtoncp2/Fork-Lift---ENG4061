@@ -231,10 +231,10 @@ def _vision_worker():
                                         x0 = posicao_camera[0]
                                         z0 = posicao_camera[2] / 2
                                         
-                                        z_lin = abs(z0) - 0.2 / 2
+                                        z_lin = z0 - 0.2 / 2 if z0 > 0 else z0 + 0.2 / 2
 
-                                        theta_lin = angulo_entre_rad(n_cam_tag_space, [abs(x0),0,z_lin])
-                                        theta_volta = -angulo_entre_rad([0,0,-1], [abs(x0),0,z_lin])
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin])
+                                        theta_volta = -angulo_entre_rad([0,0,-1], [x0,0,z_lin])
                                         
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)*0.9
                                         
