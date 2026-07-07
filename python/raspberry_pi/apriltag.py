@@ -190,7 +190,7 @@ def _vision_worker():
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID:    
                                     t = tag.pose_t.flatten()
-                                    r = tag.pose_r.flatten()
+                                    r = tag.pose_R.flatten()
 
                                     R, _ = cv2.Rodrigues(np.array(r))
                                     t = np.array(t).flatten()
@@ -217,7 +217,7 @@ def _vision_worker():
                                         #theta_k = np.arctan2(kz, kx)       
                                         #theta_ef = theta_k - theta_lin    
                                         #theta_volta = -(abs(theta_k)-np.pi/4) 
-                                        
+
                                         theta_ef /= 4
                                         theta_volta /= 4
                                         rho_lin /= 4
