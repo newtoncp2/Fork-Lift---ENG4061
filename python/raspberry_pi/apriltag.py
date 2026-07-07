@@ -257,7 +257,7 @@ def _vision_worker():
                                         # O robô chega em P com heading theta_ef; precisa girar (angle_to_tag - theta_ef)
                                         theta_volta = angle_to_tag - theta_lin
                                         # Normaliza para (−π, π]
-                                        theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
+                                        #theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
 
                                         '''
                                         n_cam_cam_space = np.array([0, 0, 1])
