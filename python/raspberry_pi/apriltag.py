@@ -77,7 +77,7 @@ tmed = np.zeros(3)
 cont = 0
 
 #SEARCH_MODE_TIMEOUT = 5.0  # seconds without tag detection before sending search mode command
-TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [0, 1])
+TARGET_TAG_ID = os.getenv("TARGET_TAG_ID", [1, 8])
 tag_counter = 0
 try:
     TARGET_TAG_ID = json.loads(TARGET_TAG_ID)
@@ -145,7 +145,6 @@ def angulo_entre_rad(v1,v2):
     
     return np.arccos(cos_angulo)
 
-
 def media_R(Rs):
     """
     Calcula a média de múltiplas matrizes de rotação usando quaternions.
@@ -204,25 +203,16 @@ def _vision_worker():
                             tag_size=tag_size,
                         )
                         if tags:
-                            print("vi tag")
+            
                             for tag in tags:
-                                if tag.tag_id == TARGET_TAG_ID:
-                                    print("minha tag!!")    
+                                if tag.tag_id == TARGET_TAG_ID:   
                                     t = tag.pose_t.flatten()                                
                                     R = tag.pose_R
                                     
                                     tmed += t
                                     Rs.append(R)
-                                    #x0 += t[0]
-                                    #z0 += t[2]
-                                    #z_lin += z0 - 0.25 #
-
-                                    #kx += tag.pose_R[2, 0]
-                                    #kz += tag.pose_R[2, 2]
-                                    print("a: " + str(cont))                 
+                
                                     if cont >= 5:
-                                        print("calculando...")
-                                    #    x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
                                         tmed /= 6
                                         Rmed = media_R(Rs)
                                         
@@ -274,7 +264,7 @@ def _vision_worker():
                         estado_anterior = "buscar"
                         config.estado = "confirmar"                                       
                         
-                        if etapa_busca > 7:
+                        if etapa_busca >= 7:
                             etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
@@ -299,7 +289,8 @@ def _vision_worker():
                     
                         if etapa_ideal > 4:
                             etapa_ideal = 0
-                            #estado = "manual"
+                            estado = "ler"
+                            estado_anterior = "buscar"
                             config.is_autonomous = False
                     case "confirmar":
                         try:
