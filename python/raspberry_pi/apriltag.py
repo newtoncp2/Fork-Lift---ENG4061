@@ -63,7 +63,7 @@ response_queue_mutex = threading.Lock()
 stop_event = threading.Event()
 
 # Global variables
-busca = [f"1 {np.pi/3}\n", f"1 -{np.pi/3}\n", f"1 -{np.pi/3}\n",f"1 {np.pi/3}\n", "2 0.35\n"]
+busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n" f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
 etapa_busca = 0
@@ -178,9 +178,8 @@ def _vision_worker():
                                     kx += tag.pose_R[2, 0]
                                     kz += tag.pose_R[2, 2]
 
-                                    if cont >= 8:
-                                        print("cont");
-                                        x0 /= 9; z0 /= 9; z_lin /= 9; kx /= 9; kz /= 9
+                                    if cont >= 3:
+                                        x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
 
                                         cont = 0
 
@@ -196,8 +195,8 @@ def _vision_worker():
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
-                                        aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
-
+                                        #aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
+                                        aprox = [f"1 {theta_ef}",f"2 {rho_lin}"]
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
                                         if x0 < 0.13 and rho_lin < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: config.estado = "aproximar"; etapa_busca = 0;
@@ -217,7 +216,7 @@ def _vision_worker():
                         estado_anterior = "buscar"
                         config.estado = "confirmar"                                       
                         
-                        if etapa_busca > 4:
+                        if etapa_busca > 8:
                             etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
@@ -228,7 +227,7 @@ def _vision_worker():
                         estado_anterior = "aproximar"
                         config.estado = "confirmar"
                         
-                        if etapa_aprox > 2:
+                        if etapa_aprox > 1:
                             config.estado = "manual"
                             etapa_aprox = 0 
                     case "ideal":
