@@ -236,7 +236,7 @@ def _vision_worker():
                                     
                                         angle_to_tag = float(np.arctan2(dx, dz))
                                     
-                                        theta_volta = angle_to_tag - theta_lin
+                                        theta_volta = angle_to_tag - theta_lin - np.pi/2
                                         theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
 
                                         '''
