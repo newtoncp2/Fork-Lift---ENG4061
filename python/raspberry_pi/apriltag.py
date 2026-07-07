@@ -283,8 +283,8 @@ def _vision_worker():
                         comando = ideal[etapa_ideal]
                         etapa_ideal += 1
                        
-                        with command_queue_mutex:
-                            command_queue.put(comando) 
+                        #with command_queue_mutex:
+                        #    command_queue.put(comando) 
                         estado_anterior = "ideal"
                         config.estado = "confirmar" 
                     
