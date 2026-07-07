@@ -178,8 +178,8 @@ def _vision_worker():
                                     kx += tag.pose_R[2, 0]
                                     kz += tag.pose_R[2, 2]
 
-                                    if cont >= 3:
-                                        x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
+                                    if cont >= 1:
+                                        x0 /= 2; z0 /= 2; z_lin /= 2; kx /= 2; kz /= 2
 
                                         cont = 0
 
