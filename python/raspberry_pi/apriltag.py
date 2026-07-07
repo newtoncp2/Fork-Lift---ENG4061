@@ -226,20 +226,9 @@ def _vision_worker():
 
                                         R = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
                                         t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
-                                    
-                                        # ── Normais ──────────────────────────────────────────────────────────────
-                                    
-                                        # Normal da tag no próprio frame da tag
-                                        tag_normal = np.array([0.0, 0.0, 1.0])
-                                    
-                                        # Direção "frente" da câmera (Z da câmera) expressa no frame da tag
-                                        # R leva tag→câmera, então R.T leva câmera→tag
-                                        cam_normal_in_tag = R.T @ np.array([0.0, 0.0, 1.0])
-                                    
-                                        # ── Ponto alvo P no frame da câmera ──────────────────────────────────────
-                                    
+                                                                        
                                         # P está a `target_dist` ao longo da normal da tag (eixo Z do frame da tag)
-                                        P_tag = np.array([0.0, 0.0, 0.15])
+                                        P_tag = np.array([0.0, 0.0, 0.015])
                                         P_cam = R @ P_tag + t   # P no frame da câmera
                                     
                                         # ── Navegação 2-D no plano horizontal (plano XZ da câmera) ───────────────
