@@ -283,6 +283,7 @@ def _vision_worker():
                             etapa_aprox = 0
                             etapa_busca = 0 
                     case "ideal":
+                        print("ideal")
                         comando = ideal[etapa_ideal]
                         etapa_ideal += 1
                        
