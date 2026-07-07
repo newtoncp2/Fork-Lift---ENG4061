@@ -197,6 +197,7 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if config.is_autonomous:  # tirar or 1
+                print(estado)
                 match config.estado:
                     case "ler":
                         tags = at_detector.detect(
@@ -256,7 +257,7 @@ def _vision_worker():
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
                                         print(pitch)
 
-                                        if abs(pitch) < 0.2 and rho_lin < 0.8: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
+                                        if abs(pitch) < 0.2 and rho_lin < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
