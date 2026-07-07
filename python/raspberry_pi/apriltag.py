@@ -178,9 +178,7 @@ def _vision_worker():
                                 if tag.tag_id == TARGET_TAG_ID:
                                     print("minha tag!!")    
                                     t = tag.pose_t.flatten()                                    
-                                    r = tag.pose_R
-
-                                    R, _ = cv2.Rodrigues(np.array(r))
+                                    R = tag.pose_R
                                     
                                     tmed += t
                                     Rmed += R
