@@ -189,9 +189,9 @@ def _vision_worker():
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = (theta_k/abs(theta_k))*(abs(theta_k) - abs(theta_lin))
                                         if theta_ef > 0 :    
-                                            theta_volta = -(theta_lin/abs(theta_lin))*np.cos(z_lin/rho_lin)
+                                            theta_volta = -np.cos(z_lin/rho_lin) - np.pi/4
                                         else:
-                                            theta_volta = (theta_lin/abs(theta_lin))*np.sin(z_lin/rho_lin)
+                                            theta_volta = np.sin(z_lin/rho_lin) + np.pi/4
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
