@@ -247,8 +247,8 @@ def _vision_worker():
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
 
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
-                                        print(pitch)
-                                        if pitch < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        
+                                        if abs(pitch) < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
