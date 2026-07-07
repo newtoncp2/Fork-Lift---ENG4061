@@ -157,6 +157,7 @@ def _vision_worker():
             with frame_queue_mutex:
                 frame = frame_queue.get_nowait()
         except queue.Empty:
+            logger.warning("No frame on queue")
             continue     
         
         try:
@@ -211,14 +212,14 @@ def _vision_worker():
                                         theta_lin = angulo_entre_rad(n_cam_tag_space,[x0,z_lin]) # INVERTER SE GIRAR PRO LADO ERRADO
                                         theta_volta = angulo_entre_rad([x0,z_lin],[0,-1])
 
-                                        rho_lin = np.sqrt(x0**2 + z_lin**2)/4
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)
 
                                         print(f"rho': {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
-                                        if x0 < 0.13 and rho_lin < 0.2: estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+                                        if x0 < 0.00013 and rho_lin < 0.00002: estado = "manual"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
                                         else: estado = "aproximar"; etapa_busca = 0;
 
                                         x0 = z0 = z_lin = kx = kz = 0.0
