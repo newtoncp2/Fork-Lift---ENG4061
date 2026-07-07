@@ -237,7 +237,7 @@ def _vision_worker():
                         estado_anterior = "buscar"
                         estado = "confirmar"                                       
                         
-                        if etapa_busca > 8:
+                        if etapa_busca > 7:
                             print("reiniciando busca")
                             etapa_busca = 0
                     case "aproximar":
