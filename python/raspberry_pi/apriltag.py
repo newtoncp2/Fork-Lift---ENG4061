@@ -172,7 +172,7 @@ def _vision_worker():
                                     t = tag.pose_t.flatten()
     
                                     x0 += t[0]
-                                    z0 += t[2] / 2.65 # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    z0 += t[2] / 2.68 # ajuste de calibração POSSÍVEL: dividir por 2.8
                                     z_lin += z0 - 0.25 
 
                                     kx += tag.pose_R[2, 0]
@@ -186,11 +186,13 @@ def _vision_worker():
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
                                         theta_lin = np.arctan2(z_lin, x0)
                                         theta_k = np.arctan2(kz, kx)       
-                                        theta_ef = (theta_k/abs(theta_k))*(abs(theta_k) - abs(theta_lin))    
-                                        theta_volta = -(theta_lin/abs(theta_lin))*np.cos(z_lin/rho_lin)
-
+                                        theta_ef = (theta_k/abs(theta_k))*(abs(theta_k) - abs(theta_lin))
+                                        if theta_ef > 0 :    
+                                            theta_volta = -(theta_lin/abs(theta_lin))*np.cos(z_lin/rho_lin)
+                                        else:
+                                            theta_volta = (theta_lin/abs(theta_lin))*np.cos(z_lin/rho_lin)
                                         print(f"x0: {x0}, rho': {rho_lin}")
-                                        print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
+                                        print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
