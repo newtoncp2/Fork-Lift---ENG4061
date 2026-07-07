@@ -223,7 +223,7 @@ def _vision_worker():
                                         yaw, pitch, roll = rot.as_euler('zyx', degrees=False)
 
                                         theta_lin = -pitch
-                                        theta_volta = pitch
+                                        theta_volta = -(theta_lin/abs(theta_lin))*np.pi/2
 
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
