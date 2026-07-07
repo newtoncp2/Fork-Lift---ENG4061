@@ -239,14 +239,14 @@ def _vision_worker():
                                                                               
                                         theta_lin = -(np.pi - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                         theta_volta = np.pi - angulo_entre_rad([0,0,-1], [x0,0,z_lin])
-                                                     
+                                        '''
                                         if x0 < 0:
                                             z_lin = -z0 + 0.2 / 2
                                             theta_lin = -(np.pi/2 - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                             theta_volta = -(angulo_entre_rad([x0,0,z_lin], [0,0,-1]) - np.pi/4)
                                         elif theta_lin < 0:
                                             theta_volta = theta_volta - np.pi/2 + np.pi/5
-                                        
+                                        '''
                                         print(f"x0: {x0}, z0': {z0}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
