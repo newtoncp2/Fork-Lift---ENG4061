@@ -222,7 +222,7 @@ def _vision_worker():
                                         
                                         cont = 0
                                                                         
-                                        P_tag = np.array([0.0, 0.0, 0.35])
+                                        P_tag = np.array([0.0, 0.0, 0.45])
                                         P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
