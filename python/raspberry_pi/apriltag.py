@@ -253,7 +253,7 @@ def _vision_worker():
                                     
                                         # theta_ef: ângulo que o robô deve girar para apontar para P
                                         #   atan2(x, z) → positivo = vira à esquerda (sentido anti-horário visto de cima)
-                                        theta_ef = float(np.arctan2(px, pz))
+                                        theta_lin = float(np.arctan2(px, pz))
                                     
                                         # ── theta_volta: ângulo para encarar a tag após chegar em P ──────────────
                                     
@@ -266,7 +266,7 @@ def _vision_worker():
                                         angle_to_tag = float(np.arctan2(dx, dz))
                                     
                                         # O robô chega em P com heading theta_ef; precisa girar (angle_to_tag - theta_ef)
-                                        theta_volta = angle_to_tag - theta_ef
+                                        theta_volta = angle_to_tag - theta_lin
                                         # Normaliza para (−π, π]
                                         theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
 
