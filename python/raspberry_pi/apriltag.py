@@ -157,7 +157,6 @@ def _vision_worker():
             with frame_queue_mutex:
                 frame = frame_queue.get_nowait()
         except queue.Empty:
-            logger.warning("No frame on queue")
             continue     
         
         try:
@@ -208,7 +207,7 @@ def _vision_worker():
                                         z0 = posicao_camera[2]
                                         
                                         z_lin = z0 - 0.2
-                                        
+
                                         theta_lin = angulo_entre_rad(n_cam_tag_space,[x0,z_lin]) # INVERTER SE GIRAR PRO LADO ERRADO
                                         theta_volta = angulo_entre_rad([x0,z_lin],[0,-1])
 
