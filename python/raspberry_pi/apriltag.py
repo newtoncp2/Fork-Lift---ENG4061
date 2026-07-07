@@ -208,6 +208,7 @@ def _vision_worker():
                         if tags:
                             for tag in tags:
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
+                                    print("TARGET_ID:" + str(TARGET_TAG_ID[tag_counter]));
                                     t = tag.pose_t.flatten()                                
                                     r = tag.pose_R
 
@@ -228,12 +229,18 @@ def _vision_worker():
                                                                     
                                         x0 = posicao_camera[0]
                                         z0 = posicao_camera[2] / 2
-                                        z_lin = z0 - 0.2 / 2
+                                        z_lin = z0 - 0.2 / 2   
+
+                                        
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)*0.7
                                                                               
-                                        theta_lin = -(np.pi - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
-                                        theta_volta = np.pi - angulo_entre_rad([0,0,-1], [x0,0,z_lin])
+                                        theta_lin = angulo_entre_rad([abs(x0),0,z_lin], n_cam_tag_space)
+                                        theta_volta = angulo_entre_rad([0,0,-1], [abs(x0),0,z_lin]) 
+
+                                        if x0 < 0:
+                                            theta_lin *= -1
+                                            theta_volta *= -1
                                         '''
                                         if x0 < 0:
                                             z_lin = -z0 + 0.2 / 2
@@ -248,7 +255,8 @@ def _vision_worker():
 
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
                                         print(pitch)
-                                        if abs(pitch) < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
+
+                                        if abs(pitch) < 0.2 and rho_lin < 50: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0
 
                                         tmed = np.zeros(3); Rs.clear()
