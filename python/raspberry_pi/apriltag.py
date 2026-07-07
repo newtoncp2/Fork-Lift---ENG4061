@@ -263,7 +263,7 @@ def _vision_worker():
                         estado_anterior = "buscar"
                         config.estado = "confirmar"                                       
                         
-                        if config.etapa_busca > 7:
+                        if config.etapa_busca >= 7:
                             config.etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
