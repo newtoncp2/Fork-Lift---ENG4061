@@ -265,7 +265,8 @@ def _vision_worker():
                                         cont += 1
 
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
-                        config.estado = estado_anterior if (config.estado == "ler" and cont == 0) else config.estado # AJUSTAR CONDIÇÃO
+                        config.estado = estado_anterior if (config.estado == "ler" and cont == 0) else config.estado
+                        if config.estado != "aproximar" and etapa_aprox != 0: config.estado = "aproximar"
                     case "buscar":
                         comando = busca[config.etapa_busca]
                         config.etapa_busca += 1
