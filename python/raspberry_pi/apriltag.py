@@ -233,8 +233,8 @@ def _vision_worker():
                                         
                                         z_lin = z0 - 0.2
 
-                                        theta_lin = angulo_entre_rad(n_cam_tag_space,[x0,z_lin]) # INVERTER SE GIRAR PRO LADO ERRADO
-                                        theta_volta = angulo_entre_rad([x0,z_lin],[0,0,-1])
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space,[x0,0,z_lin]) # INVERTER SE GIRAR PRO LADO ERRADO
+                                        theta_volta = angulo_entre_rad([x0,0,z_lin],[0,0,-1])
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
 
