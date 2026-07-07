@@ -172,7 +172,7 @@ def _vision_worker():
                                     t = tag.pose_t.flatten()
     
                                     x0 += t[0]
-                                    z0 += t[2] / 2.8 # ajuste de calibração POSSÍVEL: dividir por 2.8
+                                    z0 += t[2] / 2.5 # ajuste de calibração POSSÍVEL: dividir por 2.8
                                     z_lin += z0 - 0.25 
 
                                     kx += tag.pose_R[2, 0]
@@ -182,12 +182,12 @@ def _vision_worker():
                                         x0 /= 4; z0 /= 4; z_lin /= 4; kx /= 4; kz /= 4
 
                                         cont = 0
-                                       
+                                        
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
                                         theta_lin = np.arctan2(z_lin, x0)
                                         theta_k = np.arctan2(kz, kx)       
                                         theta_ef = (theta_k/abs(theta_k))*(abs(theta_k) - abs(theta_lin))    
-                                        theta_volta = -(theta_lin/abs(theta_lin))*np.cos(z0/rho_lin)
+                                        theta_volta = -(theta_lin/abs(theta_lin))*np.cos(z_lin/rho_lin)
 
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_k}") 
