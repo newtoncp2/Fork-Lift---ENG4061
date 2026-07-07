@@ -221,24 +221,35 @@ def _vision_worker():
                                         Rmed = media_R(Rs)
                                         
                                         cont = 0
-                                                                        
+                                        
+                                        dist_to_tag = float(np.linalg.norm(tmed))
+                                        P_cam = t * (dist_to_tag - 0.45) / dist_to_tag
+
                                         P_tag = np.array([0.0, 0.0, 0.45])
-                                        P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
+                                        #P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
-                       
-                                        rho_lin = float(np.hypot(px, pz)) / 2
-                                    
+
+                                        rho_lin = float(np.hypot(px, pz))
+                                        #rho_lin = float(np.hypot(px, pz)) / 2
+
                                         theta_lin = float(np.arctan2(px, pz))
+
+                                        #theta_lin = float(np.arctan2(px, pz))
                                     
                                         dx = tmed[0] - px
                                         dz = tmed[2] - pz
                                     
-                                        angle_to_tag = float(np.arctan2(dx, dz))
+                                        #angle_to_tag = float(np.arctan2(dx, dz))
                                     
-                                        theta_volta = angle_to_tag - theta_lin - np.pi/2
-                                        theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
-
+                                        #theta_volta = angle_to_tag - theta_lin - np.pi/2
+                                        #theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
+                                        if np.hypot(dx, dz) > 1e-9:
+                                            angle_to_tag = float(np.arctan2(dx, dz))
+                                            theta_volta  = float(angle_to_tag - theta_lin)
+                                            theta_volta  = (theta_volta + np.pi) % (2.0 * np.pi) - np.pi
+                                        else:
+                                            theta_volta = 0.0
                                         '''
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
