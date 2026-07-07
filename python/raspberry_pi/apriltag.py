@@ -6,14 +6,16 @@ import queue
 import threading
 import time
 from .config import config
-from .setup import setup_resources
+from .setup import (setup_resources, db_pool)
+from scipy.spatial.transform import Rotation as R
 from .connections import (
     create_and_start_mqtt,
     safe_disconnect,
     make_on_connect,
     make_on_message,
     start_serial_writer,
-    start_serial_reader
+    start_serial_reader,
+    start_db_inserter
 )
 
 # Centralized resource setup
@@ -58,6 +60,7 @@ frame_queue_mutex = threading.Lock()
 ws_queue_mutex = threading.Lock()
 command_queue_mutex = threading.Lock()
 response_queue_mutex = threading.Lock()
+db_queue: "queue.Queue[tuple]" = queue.Queue(maxsize=500)
 
 stop_event = threading.Event()
 
@@ -303,9 +306,11 @@ async def main():
     serial_reader_thread = start_serial_reader(ser, response_queue, stop_event, response_queue_mutex)
     capture_thread = threading.Thread(target=_capture_worker, name="capture-worker", daemon=True)
     vision_thread = threading.Thread(target=_vision_worker, name="vision-worker", daemon=True)
+    db_inserter_thread = start_db_inserter(db_pool, db_queue, stop_event)
 
     capture_thread.start()
     vision_thread.start()
+    db_inserter_thread.start()
 
     try:
         mqtt_client.loop_start()
@@ -320,7 +325,8 @@ async def main():
         vision_thread.join(timeout=1.0)
         serial_writer_thread.join(timeout=1.0)
         serial_reader_thread.join(timeout=1.0)
-    
+        db_inserter_thread.join(timeout=2.0) 
+
 def _run_main():
     try:
         asyncio.run(main())

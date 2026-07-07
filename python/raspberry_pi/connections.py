@@ -118,13 +118,39 @@ def step_mqtt(client):
         pass
 
 
+# connections.py
+
+def start_db_inserter(
+    db_pool,
+    db_queue: "queue.Queue[tuple]",
+    stop_event: threading.Event,
+):
+    """Thread dedicada a drenar db_queue e inserir no Postgres."""
+    def _worker():
+        while not stop_event.is_set() or not db_queue.empty():
+            try:
+                dados = db_queue.get(timeout=0.2)
+            except queue.Empty:
+                continue
+            try:
+                insere_telemetria(db_pool, *dados)
+            except Exception as e:
+                logger.debug(f"Erro ao inserir telemetria (db_inserter): {e}")
+            finally:
+                db_queue.task_done()
+
+    thread = threading.Thread(target=_worker, name="db-inserter", daemon=True)
+    thread.start()
+    return thread
+
+
 def start_serial_reader(
     serial_port,
     response_queue: "queue.Queue[str]",
     stop_event: threading.Event,
     response_queue_mutex: Optional[object] = None,
-    db_pool=None):
-    """Start a dedicated thread that performs blocking serial reads and puts lines into a queue."""
+    db_queue: Optional["queue.Queue[tuple]"] = None,   # <- troca db_pool por db_queue
+):
     def _worker():
         while not stop_event.is_set():
             if serial_port is None:
@@ -141,8 +167,11 @@ def start_serial_reader(
                             response_queue.put(line)
                     print(f"Arduino: {line}")
                     dados = parse_telemetria(line)
-                    if dados:
-                        insere_telemetria(db_pool, *dados)
+                    if dados and db_queue is not None:
+                        try:
+                            db_queue.put_nowait(dados)
+                        except queue.Full:
+                            logger.warning("db_queue cheia, descartando leitura de telemetria")
             except Exception as e:
                 logger.debug(f"Serial reader error: {e}")
 
