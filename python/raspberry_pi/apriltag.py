@@ -67,7 +67,6 @@ stop_event = threading.Event()
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n" f"1 -{np.pi/4}\n",f"1 -{np.pi/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
 ideal = ["3 95",f"2 0.15",f"3 5",f"2 -0.2", f"3 -95"] # AJUSTAR VALORES
-etapa_busca = 0
 etapa_aprox = 0
 etapa_ideal = 0
 estado_anterior = "buscar"
@@ -168,7 +167,7 @@ def media_R(Rs):
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, tmed, Rmed, etapa_busca, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
+    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_aprox, etapa_ideal, estado, estado_anterior
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -193,7 +192,7 @@ def _vision_worker():
             undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
-            if config.is_autonomous: # tirar or 1
+            if config.is_autonomous:  # tirar or 1
                 match config.estado:
                     case "ler":
                         tags = at_detector.detect(
@@ -228,7 +227,7 @@ def _vision_worker():
                                         z0 = posicao_camera[2] / 2
                                         z_lin = z0 - 0.2 / 2
 
-                                        rho_lin = np.sqrt(x0**2 + z_lin**2)*0.75
+                                        rho_lin = np.sqrt(x0**2 + z_lin**2)*0.7
                                         
                                         theta_lin = -(np.pi - angulo_entre_rad(n_cam_tag_space, [x0,0,z_lin]))
                                         theta_volta = np.pi - angulo_entre_rad([0,0,-1], [x0,0,z_lin])
@@ -246,7 +245,7 @@ def _vision_worker():
 
                                         #mudar estado = "ideal" para config.is_autonomous = false para desativar o modo firula (pallet autonomo)
                                         if x0 < 0.13 and rho_lin < 0.2: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR VALORES ! !
-                                        else: config.estado = "aproximar"; etapa_busca = 0;
+                                        else: config.estado = "aproximar"; config.etapa_busca = 0;
 
                                         tmed = np.zeros(3); Rs.clear()
                                     else:
@@ -256,16 +255,16 @@ def _vision_worker():
                         # condição abaixo é a combinação necessária para saber que nenhuma tag foi detectada e as 3 detecções para tirar média já passaram
                         config.estado = estado_anterior if (config.estado == "ler" and cont == 0) else config.estado # AJUSTAR CONDIÇÃO
                     case "buscar":
-                        comando = busca[etapa_busca]
-                        etapa_busca += 1
+                        comando = busca[config.etapa_busca]
+                        config.etapa_busca += 1
                         
                         with command_queue_mutex:
                             command_queue.put(comando) 
                         estado_anterior = "buscar"
                         config.estado = "confirmar"                                       
                         
-                        if etapa_busca > 7:
-                            etapa_busca = 0
+                        if config.etapa_busca > 7:
+                            config.etapa_busca = 0
                     case "aproximar":
                         comando = aprox[etapa_aprox]
                         etapa_aprox += 1
