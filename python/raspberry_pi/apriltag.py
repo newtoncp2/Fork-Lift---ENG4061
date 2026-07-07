@@ -69,7 +69,7 @@ stop_event = threading.Event()
 # Global variables
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 aprox = ["","",""]
-ideal = ["3 85",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
+ideal = ["3 85",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_aprox = 0
 etapa_ideal = 0
 estado_anterior = "buscar"
@@ -224,7 +224,7 @@ def _vision_worker():
 
                                         theta_lin = pitch
                                         theta_volta = -pitch
-                                        
+
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
@@ -287,19 +287,19 @@ def _vision_worker():
                         
                         if etapa_aprox > 2:
                             aprox.clear()
-                            config.estado = "ideal"
+                            config.estado = "ler"
                             etapa_aprox = 0
                             etapa_busca = 0 
                     case "ideal":
                         comando = ideal[etapa_ideal]
                         etapa_ideal += 1
                        
-                        #with command_queue_mutex:
-                        #    command_queue.put(comando) 
+                        with command_queue_mutex:
+                            command_queue.put(comando) 
                         estado_anterior = "ideal"
                         config.estado = "confirmar" 
                     
-                        if etapa_ideal > 0:
+                        if etapa_ideal > 6:
                             tag_counter += 1 if tag_counter < len(TARGET_TAG_ID) else 0
                             etapa_ideal = 0
                             estado = "ler"
