@@ -190,7 +190,7 @@ def _vision_worker():
                                         if theta_ef > 0 :    
                                             theta_volta = -(theta_lin/abs(theta_lin))*np.cos(z_lin/rho_lin)
                                         else:
-                                            theta_volta = (theta_lin/abs(theta_lin))*np.sen(z_lin/rho_lin)
+                                            theta_volta = (theta_lin/abs(theta_lin))*np.sin(z_lin/rho_lin)
                                         print(f"x0: {x0}, rho': {rho_lin}")
                                         print(f"theta_ef: {theta_ef}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_ef}",f"2 {rho_lin}", f"1 {theta_volta}"] 
