@@ -236,7 +236,7 @@ def _vision_worker():
                                     
                                         angle_to_tag = float(np.arctan2(dx, dz))
                                     
-                                        theta_volta = angle_to_tag #- theta_lin
+                                        theta_volta = angle_to_tag - theta_lin
                                         
                                         '''
                                         n_cam_cam_space = np.array([0, 0, 1])
