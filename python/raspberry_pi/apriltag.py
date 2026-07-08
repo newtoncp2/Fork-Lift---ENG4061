@@ -240,7 +240,7 @@ def _vision_worker():
                                         if n_cam_tag_space[2] > 0: n_cam_tag_space *= -1
 
                                         '''PONTO da posição da camera no ESPAÇO DA TAG'''
-                                        posicao_camera = -Rmed.T @ tmed   
+                                        posicao_camera = Rmed.T @ tmed   
                                         
                                         posicao_camera[1] = 0
                                         posicao_camera[2] *= -1
