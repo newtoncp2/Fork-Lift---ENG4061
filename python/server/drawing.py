@@ -8,7 +8,7 @@ def process_image(frame, tag):
     center = tag.center.astype(np.int32)
     t = tag.pose_t.flatten()
 
-    distancia = np.linalg.norm(t)*100 - 20
+    distancia = np.linalg.norm(t)*100
     
     rot = R.from_matrix(np.eye(3))
     
@@ -79,7 +79,7 @@ def draw_pose(overlay, camera_params, tag_size, pose, z_sign=1):
     tag_pose_t = pose[:3,3]
     cv2.putText(
         overlay,
-        'X: ' + str(tag_pose_t[0][0].round(2)) + ' m',
+        'X',
         ipoints[0],
         font,
         0.5,
@@ -90,7 +90,7 @@ def draw_pose(overlay, camera_params, tag_size, pose, z_sign=1):
 
     cv2.putText(
         overlay,
-        'Y: ' + str(tag_pose_t[1][0].round(2)) + ' m',
+        'Y',
         ipoints[2],
         font,
         0.5,
@@ -101,7 +101,7 @@ def draw_pose(overlay, camera_params, tag_size, pose, z_sign=1):
 
     cv2.putText(
         overlay,
-        '-Z: ' + str(tag_pose_t[2][0].round(2)) + ' m',
+        '-Z',
         ipoints[3],
         font,
         0.5,

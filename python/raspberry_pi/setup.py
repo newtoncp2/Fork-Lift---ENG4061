@@ -105,7 +105,7 @@ def setup_resources(base_dir: str | None = None):
         dist_coeffs = np.zeros(5)
         camera_params = (800.0, 800.0, 640.0, 480.0)  # Default focal length and principal point
 
-    tag_size = 0.05
+    tag_size = 0.052
 
     # Load AprilTag detector (non-fatal)
     # Uses the pupil_apriltags library for detecting AprilTags in images
