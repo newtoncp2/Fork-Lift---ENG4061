@@ -3,6 +3,7 @@ class AppState:
         self._is_autonomous = False
         self._estado = "manual"  # Default state is manual
         self._etapa_busca = 0
+        self._etapa_aprox = 0
 
     # Using properties lets you add logic/validation later if needed
     @property
@@ -16,6 +17,10 @@ class AppState:
     @property
     def etapa_busca(self):
         return self._etapa_busca
+    
+    @property
+    def etapa_aprox(self):
+        return self._etapa_aprox
 
     @is_autonomous.setter
     def is_autonomous(self, value):
@@ -36,6 +41,13 @@ class AppState:
         if isinstance(value, int):
             self._etapa_busca = value
         else:
-            raise ValueError("estado must be a int value")
+            raise ValueError("etapa_busca must be a int value")
+
+    @etapa_aprox.setter
+    def etapa_aprox(self, value):
+        if isinstance(value, int):
+            self._etapa_aprox = value
+        else:
+            raise ValueError("etapa_aprox must be a int value")
 
 config = AppState()

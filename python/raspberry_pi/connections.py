@@ -222,6 +222,7 @@ def make_on_message(serial_port: Optional[object] = None):
                 return f"0 {velocidade},{-velocidade}\n"
             return None
         if modo == 1:
+            config.etapa_aprox = 0
             config.etapa_busca = 0
             config.estado = "ler"
             config.is_autonomous = True

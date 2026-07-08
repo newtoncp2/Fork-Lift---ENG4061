@@ -71,7 +71,6 @@ busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1
 
 aprox = ["","",""]
 ideal = ["3 55",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
-etapa_aprox = 0
 etapa_ideal = 0
 estado_anterior = "buscar"
 x0, z0, z_lin = 0.0, 0.0, 0.0
@@ -171,7 +170,7 @@ def media_R(Rs):
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_aprox, etapa_ideal, estado_anterior, tag_counter
+    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_ideal, estado_anterior, tag_counter
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -235,11 +234,11 @@ def _vision_worker():
                                         z0 = -posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
 
                                         '''robo para 0.15 m à frente da câmera'''
-                                        z_lin =  posicao_camera[2] - 0.15  
+                                        z_lin =  posicao_camera[2] - 0.35  
 
                                         rho_lin = np.sqrt(x0**2 + z_lin**2)
 
-                                        w = np.array([0.0, 0.0, 0.15]) - np.array(posicao_camera)
+                                        w = np.array([0.0, 0.0, 0.35]) - np.array(posicao_camera)
                                         
                                         theta_lin = angulo_entre_rad(n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,1], w)
@@ -253,7 +252,7 @@ def _vision_worker():
                                         
                                         pitch = 1
                                         if abs(pitch) < 0.2 and rho_lin < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
-                                        else: config.estado = "aproximar"; config.etapa_busca = 0
+                                        else: config.estado = "aproximar"; config.etapa_busca = 0; config.etapa_aprox
 
                                         tmed = np.zeros(3); Rs.clear()
                                     else:
@@ -274,19 +273,19 @@ def _vision_worker():
                         if config.etapa_busca > 8:
                             config.etapa_busca = 0
                     case "aproximar":
-                        comando = aprox[etapa_aprox]
-                        etapa_aprox += 1
+                        comando = aprox[config.etapa_aprox]
+                        config.etapa_aprox += 1
 
                         with command_queue_mutex:
                             command_queue.put(comando)
                         estado_anterior = "aproximar"
                         config.estado = "confirmar"
                         
-                        if etapa_aprox > 2:
+                        if config.etapa_aprox > 2:
                             aprox.clear()
                             config.estado = "ler"
                             estado_anterior = "buscar"
-                            etapa_aprox = 0
+                            config.etapa_aprox = 0
                             etapa_busca = 0 
                     case "ideal":
                         print("ideal")
