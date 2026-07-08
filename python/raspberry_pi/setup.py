@@ -103,7 +103,7 @@ def setup_resources(base_dir: str | None = None):
         # Set default dummy calibration values for testing without real camera
         camera_matrix = np.eye(3)
         dist_coeffs = np.zeros(5)
-        camera_params = (800.0, 800.0, 320.0, 240.0)  # Default focal length and principal point
+        camera_params = (800.0, 800.0, 640.0, 480.0)  # Default focal length and principal point
 
     tag_size = 0.05
 

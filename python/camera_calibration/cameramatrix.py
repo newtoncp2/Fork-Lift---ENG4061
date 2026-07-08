@@ -7,10 +7,10 @@ import glob
 # =========================
 
 # Número de cantos internos do tabuleiro
-CHESSBOARD_SIZE = (5, 8)
+CHESSBOARD_SIZE = (6, 9)
 
 # Tamanho real de cada quadrado (em metros, mm, etc.)
-SQUARE_SIZE = 0.03
+SQUARE_SIZE = 0.025
 
 # Pasta contendo as imagens da calibração
 IMAGE_PATHS = glob.glob("calibration_images/*.jpg")
@@ -42,6 +42,8 @@ imgpoints = []
 # =========================
 # LEITURA DAS IMAGENS
 # =========================
+
+
 
 for fname in IMAGE_PATHS:
 
