@@ -244,15 +244,15 @@ def _vision_worker():
                                         '''robo para 0.15 m à frente da câmera'''
                                         z_lin =  posicao_camera[2] - 0.15  
 
-                                        #rho_lin = (x0**2 + z_lin**2)**0.5
-                                        rho_lin = np.linalg.norm([x0,0,z_lin])
+                                        rho_lin = (x0**2 + z_lin**2)**0.5
+                                        rho_lin2 = np.linalg.norm([x0,0,z_lin])
 
                                         w = np.array([0.0, 0.0, 0.15]) - np.array(posicao_camera)
                                         
                                         theta_lin = angulo_entre_rad(n_cam_tag_space, w) if x0 > 0 else - angulo_entre_rad(n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,1], w)
                                         
-                                        print(f"x0: {x0}, z0': {z0}, rho_lin {rho_lin}")
+                                        print(f"x0: {x0}, z0': {z0}, rho_lin {rho_lin}, rho_lin2 {rho_lin2}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"]
 
