@@ -10,7 +10,7 @@ import threading
 import time
 import json
 from .config import config
-from .setup import (setup_resources, db_pool)
+from .setup import setup_resources
 from scipy.spatial.transform import Rotation as R
 from .connections import (
     create_and_start_mqtt,
@@ -32,6 +32,8 @@ mqtt_password = _RES['mqtt_password']
 mqtt_host = _RES['mqtt_host']
 mqtt_port = _RES['mqtt_port']
 web_socket_url = _RES['web_socket_url']
+
+db_pool = _RES['db_pool']
 
 camera_matrix = _RES['camera_matrix']
 dist_coeffs = _RES['dist_coeffs']
@@ -383,8 +385,7 @@ async def main():
 
     capture_thread.start()
     vision_thread.start()
-    db_inserter_thread.start()
-
+    
     try:
         mqtt_client.loop_start()
     except Exception:
