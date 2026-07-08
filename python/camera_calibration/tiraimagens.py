@@ -1,7 +1,7 @@
 import cv2
 
 
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(-1)
 ind = 0
 
 while ind < 30:  
