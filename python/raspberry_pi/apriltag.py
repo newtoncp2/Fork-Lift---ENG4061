@@ -241,7 +241,7 @@ def _vision_worker():
 
                                         w = np.array([0.0, 0.0, 0.15]) - np.array(posicao_camera)
                                         
-                                        theta_lin = angulo_entre_rad(n_cam_tag_space, w)
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space, w) if x0 > 0 else - angulo_entre_rad(n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,1], w)
                                         
                                         print(f"x0: {x0}, z0': {z0}, rho_lin {rho_lin}")
@@ -312,7 +312,7 @@ def _vision_worker():
                                 msg = response_queue.get_nowait()
                         except:
                             msg = ""
-
+                        
                         if msg.startswith("fim modo"):
                             msg = "" 
                             config.estado = "ler" if estado_anterior != "ideal" else "ideal" 
