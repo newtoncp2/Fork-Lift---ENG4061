@@ -145,7 +145,12 @@ def angulo_entre_rad(v1,v2):
     
     cos_angulo = np.clip(produto_escalar / (norma_v1 * norma_v2), -1.0, 1.0)
     
-    return np.arccos(cos_angulo)
+    angulo = np.arccos(cos_angulo)
+
+    cross = np.cross(v1, v2)
+    sinal = np.sign(cross[1])
+
+    return sinal*angulo
 
 def media_R(Rs):
     """
@@ -242,18 +247,20 @@ def _vision_worker():
                                         x0 = posicao_camera[0]
                                         z0 = -posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
-                                        z_lin =  z0 + 0.65  
+                                        z_lin =  z0 - 0.65  
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
-                                        w = np.array([0.0, 0.0, 0.65]) - np.array(posicao_camera) 
+                                        w = np.array(posicao_camera) - np.array([0.0, 0.0, 0.65]) 
                                         
-                                        theta_lin = angulo_entre_rad(-n_cam_tag_space, w) if x0 > 0 else -angulo_entre_rad(-n_cam_tag_space, w)
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space, w) if x0 > 0 else -angulo_entre_rad(n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,-1], w) if x0 < 0 else -angulo_entre_rad([0,0,-1], w)
                                         
                                         #theta_lin = np.arctan2(n_cam_tag_space, w)
                                         #theta_volta = np.(w)
-                                        print(f"x0: {x0}, z0': {z0}, rho_lin {rho_lin}")
+                                        print(f"x_t : {tmed[0]} , z_t : {tmed[2]}") 
+                                        print(f"w: {w}, n_cam: {n_cam_tag_space}") 
+                                        print(f"x0: {x0}, z0: {z0}, z': {z_lin}, rho_lin {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"]
 
