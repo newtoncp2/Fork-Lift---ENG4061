@@ -9,7 +9,7 @@ while ind < 30:
     if not ret:
         break
     
-    #cv2.imshow('Camera Feed', frame)
+    cv2.imshow('Camera Feed', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('c'):
         cv2.imwrite('calibration_images/captured_image'+str(ind)+'.jpg', frame)
