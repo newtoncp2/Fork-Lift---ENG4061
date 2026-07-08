@@ -36,6 +36,19 @@ To handle both high-level processing (vision and web server) and low-level hardw
 * **Communication Protocol:** * MQTT (with TLS encryption) to handle telemetry and command payloads.
   * WebSockets (`websockets` library) to stream real-time video feed frames directly to the Flask dashboard.
   * Serial Communication to relay movement commands to the Arduino.
+ 
+## Telemetry & Monitoring (Grafana)
+
+To monitor the robot's health and performance in real-time, a telemetry pipeline was built using a **PostgreSQL** database and a **Grafana** dashboard. 
+
+This setup allows operators to track critical system metrics during both manual and autonomous operations:
+* **Power Consumption:** Real-time monitoring of Voltage (V), Current (mA), and overall Power (mW).
+* **Locomotion:** Live RPM tracking for both the left and right LEGO NXT motors.
+* **System Status:** Live display of the current operational state (Manual, Autonomous, Search, Aligning) and immediate alerts for Stepper Motor failures.
+
+<img width="1286" height="527" alt="Screenshot 2026-07-08 175515" src="https://github.com/user-attachments/assets/1c688248-5880-47ad-ac23-02510c81d587" />
+
+> **Import the Dashboard:** The raw JSON template for this dashboard is available in [`telemetry/telemetry_grafana.json`](telemetry/rb_telemetria.json). You can import it directly into your own Grafana instance to replicate this monitoring setup.
 
 ## Repository Structure
 
@@ -49,5 +62,6 @@ Navigate through the folders below to explore the specific modules of this proje
   * `/src/python/raspberry_pi` - Web server, AprilTag vision system, and serial communication scripts.
   * `/src/python/server` - Flask web server and MQTT broker configuration.
 * `/electronics` - Additional schematics, wiring diagrams, and project reports.
+* `/telemetry` - Contains the Grafana dashboard JSON template.
 
 *Developed as an academic project for PUC-Rio.
