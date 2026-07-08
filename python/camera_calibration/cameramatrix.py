@@ -7,13 +7,13 @@ import glob
 # =========================
 
 # Número de cantos internos do tabuleiro
-CHESSBOARD_SIZE = (6, 9)
+CHESSBOARD_SIZE = (8, 5)
 
 # Tamanho real de cada quadrado (em metros, mm, etc.)
 SQUARE_SIZE = 0.025
 
 # Pasta contendo as imagens da calibração
-IMAGE_PATHS = glob.glob("calibration_images/*.jpg")
+IMAGE_PATHS = glob.glob("python/camera_calibration/calibration_images/*.jpg")
 
 # Critério de refinamento
 criteria = (
@@ -43,10 +43,11 @@ imgpoints = []
 # LEITURA DAS IMAGENS
 # =========================
 
-
+gray = None
+print(IMAGE_PATHS)
 
 for fname in IMAGE_PATHS:
-
+    print(fname)
     img = cv2.imread(fname)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
