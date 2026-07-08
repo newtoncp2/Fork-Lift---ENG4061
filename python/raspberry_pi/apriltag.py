@@ -212,7 +212,6 @@ def _vision_worker():
                                     print("TARGET_ID:" + str(TARGET_TAG_ID[tag_counter]));
                                     r = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
                                     t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
-                                    print(f"x0 : {t[0]} , z0 : {t[2]}")
                                     tmed += t
                                     Rs.append(r)
                 
@@ -233,7 +232,7 @@ def _vision_worker():
                                         posicao_camera[1] = 0
 
                                         x0 = posicao_camera[0]
-                                        z0 = posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
+                                        z0 = -posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
 
                                         '''robo para 0.15 m à frente da câmera'''
                                         z_lin =  posicao_camera[2] - 0.15  
