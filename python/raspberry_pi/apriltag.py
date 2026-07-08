@@ -226,7 +226,8 @@ def _vision_worker():
                                         P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
-
+                                        x0 = px; z0 = pz
+                                        
                                         rho_lin = float(np.hypot(px, pz))
 
                                         theta_lin = float(np.arctan2(px, pz))
