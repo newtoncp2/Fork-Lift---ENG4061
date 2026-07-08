@@ -248,7 +248,7 @@ def _vision_worker():
 
                                         w = np.array(posicao_camera) - np.array([0.0, 0.0, 0.25])
                                         
-                                        theta_lin = angulo_entre_rad(n_cam_tag_space, w) if x0 > 0 else -angulo_entre_rad(n_cam_tag_space, w)
+                                        theta_lin = angulo_entre_rad(-n_cam_tag_space, w) if x0 > 0 else -angulo_entre_rad(-n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,1], w) if x0 < 0 else -angulo_entre_rad([0,0,1], w)
                                         
                                         #theta_lin = np.arctan2(n_cam_tag_space, w)
