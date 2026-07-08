@@ -231,11 +231,13 @@ def _vision_worker():
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         
                                         '''VETOR normal da camera no espaço da tag'''
-                                        n_cam_tag_space = Rmed.T @ n_cam_cam_space
+                                        #n_cam_tag_space = Rmed.T @ n_cam_cam_space
+                                        n_cam_tag_space = np.array([0,0,1])
                                         n_cam_tag_space[1] = 0
                                         
                                         '''PONTO da posição da camera no ESPAÇO DA TAG'''
-                                        posicao_camera = -Rmed.T @ tmed   
+                                        #posicao_camera = -Rmed.T @ tmed   
+                                        posicao_camera = tmed
                                         posicao_camera[1] = 0
 
                                         x0 = posicao_camera[0]
