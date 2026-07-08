@@ -249,13 +249,11 @@ def _vision_worker():
                                         z0 = -posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
                                         
-                                        
-                                        
-                                        z_lin =  z0 - 0.25  
+                                        z_lin =  z0 - 0.3  
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
-                                        w = np.array([0.0, 0.0, 0.25]) - np.array(posicao_camera)
+                                        w = np.array([0.0, 0.0, 0.3]) - np.array(posicao_camera)
 
                                         theta_lin = angulo_entre_rad(w,n_cam_tag_space) if x0 > 0 else -angulo_entre_rad(-n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,-1], w) if x0 < 0 else -angulo_entre_rad(w, [0,0,-1])
@@ -268,11 +266,12 @@ def _vision_worker():
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"]
 
-                                        _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=False)
+                                        _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=True)
                                         print(pitch)
                                         
-                                        pitch = 1
-                                        if abs(pitch) < 0.2 and rho_lin < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
+                                        distancia = np.linalg.norm(tmed)
+
+                                        if abs(pitch) < 3 and rho_lin < 0.28: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0;
 
                                         tmed = np.zeros(3); Rs.clear()
