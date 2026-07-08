@@ -222,7 +222,7 @@ def _vision_worker():
                                         
                                         cont = 0
                                         
-                                        P_tag = np.array([0.0, 0.0, 0.0])                                      
+                                        '''P_tag = np.array([0.0, 0.0, 0.15])                                      
                                         P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
@@ -236,11 +236,11 @@ def _vision_worker():
                                         dz = tmed[2] - pz
                                     
                                         angle_to_tag = float(np.arctan2(dx, dz))
-                                    
+
                                         theta_volta = angle_to_tag - theta_lin - np.pi/2
-                                        theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)
+                                        theta_volta = float((theta_volta + np.pi) % (2.0 * np.pi) - np.pi)'''
                                         
-                                        '''
+                                        
                                         n_cam_cam_space = np.array([0, 0, 1])
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
@@ -268,7 +268,7 @@ def _vision_worker():
                                         elif theta_lin < 0:
                                             theta_volta = theta_volta - np.pi/2 + np.pi/5
                                         
-                                        '''
+                                        
                                         print(f"x0: {x0}, z0': {z0}, rho_lin {rho_lin}")
                                         print(f"theta_lin: {theta_lin}, theta_volta: {theta_volta}") 
                                         aprox = [f"1 {theta_lin}",f"2 {abs(rho_lin)}", f"1 {theta_volta}"] 
