@@ -207,7 +207,7 @@ def _vision_worker():
                             tag_size=tag_size,
                         )
                         if tags:
-                            for tag in tags:
+                            for tag in tags:  
                                 if tag.tag_id == TARGET_TAG_ID[tag_counter]:   
                                     print("TARGET_ID:" + str(TARGET_TAG_ID[tag_counter]));
                                     r = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
@@ -226,8 +226,8 @@ def _vision_worker():
                                         P_cam = Rmed @ P_tag + tmed   # P no frame da câmera
                                                            
                                         px, _, pz = P_cam   # componentes horizontais de P no frame da câmera
-                                        x0 = px; z0 = pz
-                                        
+                                        x0 = tmed[0]; z0 = tmed[2]
+
                                         rho_lin = float(np.hypot(px, pz))
 
                                         theta_lin = float(np.arctan2(px, pz))
