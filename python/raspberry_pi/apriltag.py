@@ -69,6 +69,7 @@ stop_event = threading.Event()
 # Global variables
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 
+prox_comando = 0
 aprox = ["","",""]
 ideal = ["3 55",f"2 0.35",f"3 85",f"2 -0.2",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_ideal = 0
@@ -170,7 +171,7 @@ def media_R(Rs):
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
-    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_ideal, estado_anterior, tag_counter
+    global cont, x0, z0, z_lin, tmed, Rmed, aprox, etapa_ideal, estado_anterior, tag_counter, prox_comando
     
     if at_detector is None:
         logger.info("AprilTag detector not available, skipping vision processing")
@@ -267,6 +268,7 @@ def _vision_worker():
                         
                         with command_queue_mutex:
                             command_queue.put(comando) 
+                            prox_comando = 1
                         estado_anterior = "buscar"
                         config.estado = "confirmar"                                       
                         
@@ -278,6 +280,7 @@ def _vision_worker():
 
                         with command_queue_mutex:
                             command_queue.put(comando)
+                            prox_comando = 1
                         estado_anterior = "aproximar"
                         config.estado = "confirmar"
                         
@@ -310,7 +313,8 @@ def _vision_worker():
                         except:
                             msg = ""
 
-                        if msg.startswith("fim modo"): 
+                        if msg.startswith("fim modo"):
+                            msg = "" 
                             config.estado = "ler" if estado_anterior != "ideal" else "ideal" 
 
         except Exception as e:
