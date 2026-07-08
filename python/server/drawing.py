@@ -8,7 +8,7 @@ def process_image(frame, tag):
     center = tag.center.astype(np.int32)
     t = tag.pose_t.flatten()
 
-    distancia = np.linalg.norm(t)*100 - 20
+    distancia = np.linalg.norm(t)*100
     
     rot = R.from_matrix(np.eye(3))
     
@@ -76,6 +76,7 @@ def draw_pose(overlay, camera_params, tag_size, pose, z_sign=1):
 
     font = cv2.FONT_HERSHEY_SIMPLEX
 
+    tag_pose_t = pose[:3,3]
     cv2.putText(
         overlay,
         'X',

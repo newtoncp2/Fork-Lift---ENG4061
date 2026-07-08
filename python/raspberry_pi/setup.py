@@ -103,9 +103,9 @@ def setup_resources(base_dir: str | None = None):
         # Set default dummy calibration values for testing without real camera
         camera_matrix = np.eye(3)
         dist_coeffs = np.zeros(5)
-        camera_params = (800.0, 800.0, 640.0, 480.0)  # Default focal length and principal point
+        camera_params = (800.0, 800.0, 320.0, 240.0)  # Default focal length and principal point
 
-    tag_size = 0.05
+    tag_size = 0.052
 
     # Load AprilTag detector (non-fatal)
     # Uses the pupil_apriltags library for detecting AprilTags in images
@@ -134,8 +134,8 @@ def setup_resources(base_dir: str | None = None):
     try:
         import cv2
         cap = cv2.VideoCapture(-1, cv2.CAP_V4L2)  # Use V4L2 backend for Raspberry Pi
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320) # lower resolution for faster processing
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # lower resolution for faster processing
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Set buffer size to 1 to reduce latency
         cap.set(cv2.CAP_PROP_FPS, 15)
         if not cap.isOpened():

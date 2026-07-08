@@ -30,6 +30,8 @@ camera_params = (
     camera_matrix[1, 2],
 )
 
+print(camera_params)
+
 at_detector = Detector(
     families="tag25h9",
     nthreads=1,
