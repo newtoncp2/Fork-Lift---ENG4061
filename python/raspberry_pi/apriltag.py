@@ -147,7 +147,7 @@ def angulo_entre_rad(v1,v2):
     
     angulo = np.arccos(cos_angulo)
 
-    cross = np.cross(v1, v2)
+    cross = np.cross(v2, v1)
     sinal = np.sign(cross[1])
 
     return sinal*angulo
@@ -238,7 +238,8 @@ def _vision_worker():
                                         '''VETOR normal da camera no espaço da tag'''
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
-                                        
+                                        n_cam_tag_space[2] *= 1
+
                                         '''PONTO da posição da camera no ESPAÇO DA TAG'''
                                         posicao_camera = -Rmed.T @ tmed   
                                         
@@ -247,16 +248,16 @@ def _vision_worker():
                                         x0 = posicao_camera[0]
                                         z0 = -posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
-                                        if x0 < 0:
-                                            n_cam_tag_space[2] *= 1
+                                        
+                                        
                                         
                                         z_lin =  z0 - 0.25  
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
-                                        w = np.array(posicao_camera) - np.array([0.0, 0.0, 0.25])
+                                        w = np.array([0.0, 0.0, 0.25]) - np.array(posicao_camera)
 
-                                        theta_lin = angulo_entre_rad(-n_cam_tag_space, w) if x0 > 0 else -angulo_entre_rad(-n_cam_tag_space, w)
+                                        theta_lin = angulo_entre_rad(w,n_cam_tag_space) if x0 > 0 else -angulo_entre_rad(-n_cam_tag_space, w)
                                         theta_volta = angulo_entre_rad([0,0,-1], w) if x0 < 0 else -angulo_entre_rad([0,0,-1], w)
                                         
                                         #theta_lin = np.arctan2(n_cam_tag_space, w)
