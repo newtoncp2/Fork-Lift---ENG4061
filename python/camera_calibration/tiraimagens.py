@@ -6,6 +6,7 @@ ind = 0
 
 while ind < 30:  
     ret, frame = cap.read()
+    print(frame.shape)
     if not ret:
         break
     
