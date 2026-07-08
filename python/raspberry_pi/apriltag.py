@@ -212,7 +212,7 @@ def _vision_worker():
                                     print("TARGET_ID:" + str(TARGET_TAG_ID[tag_counter]));
                                     r = np.asarray(tag.pose_R, dtype=float)        # (3, 3)
                                     t = np.asarray(tag.pose_t, dtype=float).ravel()  # (3,)
-                                    
+                                    print(f"x0 : {t[0]} , z0 : {t[2]}")
                                     tmed += t
                                     Rs.append(r)
                 
