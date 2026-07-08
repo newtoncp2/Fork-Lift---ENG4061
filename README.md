@@ -48,7 +48,7 @@ This setup allows operators to track critical system metrics during both manual 
 
 <img width="1286" height="527" alt="Screenshot 2026-07-08 175515" src="https://github.com/user-attachments/assets/1c688248-5880-47ad-ac23-02510c81d587" />
 
-> **Import the Dashboard:** The raw JSON template for this dashboard is available in [`telemetry/telemetry_grafana.json`](telemetry/rb_telemetria.json). You can import it directly into your own Grafana instance to replicate this monitoring setup.
+> **Import the Dashboard:** The raw JSON template for this dashboard is available in [`telemetry/telemetry_grafana.json`](telemetry/telemetry_grafana.json). You can import it directly into your own Grafana instance to replicate this monitoring setup.
 
 ## Repository Structure
 
