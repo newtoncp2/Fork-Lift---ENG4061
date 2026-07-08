@@ -31,9 +31,11 @@ To handle both high-level processing (vision and web server) and low-level hardw
 
 ### Software Stack
 
-* **Computer Vision:** AprilTag recognition pipeline running on the Raspberry Pi.
-* **Control Loop:** PID loop running on the Arduino to control the LEGO NXT motors based on target references.
-* **Communication:** Serial communication established between the Raspberry Pi (master) and the Arduino (slave).
+* **Concurrency:** The Raspberry Pi script uses a mix of `threading` (for blocking serial reads/writes) and `asyncio` (for WebSocket streaming) with thread-safe queues.
+* **Computer Vision:** OpenCV and AprilTag pipeline.
+* **Communication Protocol:** * MQTT (with TLS encryption) to handle telemetry and command payloads.
+  * WebSockets (`websockets` library) to stream real-time video feed frames directly to the Flask dashboard.
+  * Serial Communication to relay movement commands to the Arduino.
 
 ## Repository Structure
 
@@ -44,8 +46,8 @@ Navigate through the folders below to explore the specific modules of this proje
 
 * `/src` - Contains all the source code.
   * `/src/arduino` - Low-level motor control and PID implementation.
-  * `/src/python` - Web server, AprilTag vision system, and serial communication scripts.
-
+  * `/src/python/raspberry_pi` - Web server, AprilTag vision system, and serial communication scripts.
+  * `/src/python/server` - Flask web server and MQTT broker configuration.
 * `/electronics` - Additional schematics, wiring diagrams, and project reports.
 
 *Developed as an academic project for PUC-Rio.
