@@ -244,7 +244,8 @@ def _vision_worker():
                                         '''robo para 0.15 m à frente da câmera'''
                                         z_lin =  posicao_camera[2] - 0.15  
 
-                                        rho_lin = (x0**2 + z_lin**2)**0.5
+                                        #rho_lin = (x0**2 + z_lin**2)**0.5
+                                        rho_lin = np.linalg.norm([x0,0,z_lin])
 
                                         w = np.array([0.0, 0.0, 0.15]) - np.array(posicao_camera)
                                         
@@ -260,7 +261,7 @@ def _vision_worker():
                                         
                                         pitch = 1
                                         if abs(pitch) < 0.2 and rho_lin < 0.5: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
-                                        else: config.estado = "aproximar"; config.etapa_busca = 0; config.etapa_aprox = 0
+                                        else: config.estado = "aproximar"; config.etapa_busca = 0;
 
                                         tmed = np.zeros(3); Rs.clear()
                                     else:
