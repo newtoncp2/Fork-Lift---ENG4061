@@ -201,7 +201,6 @@ def _vision_worker():
             gray = cv2.cvtColor(undistorted, cv2.COLOR_BGR2GRAY)
 
             if config.is_autonomous:  # tirar or 1
-                print(config.estado)
                 match config.estado:
                     case "ler":
                         tags = at_detector.detect(
