@@ -145,7 +145,12 @@ def angulo_entre_rad(v1,v2):
     
     cos_angulo = np.clip(produto_escalar / (norma_v1 * norma_v2), -1.0, 1.0)
     
-    return np.arccos(cos_angulo)
+    angulo = np.arccos(cos_angulo)
+
+    cross = np.cross(v2, v1)
+    sinal = np.sign(cross[1])
+
+    return sinal*angulo
 
 def media_R(Rs):
     """
@@ -232,32 +237,30 @@ def _vision_worker():
                                         '''VETOR normal da camera no espaço da tag'''
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
-                                        n_cam_tag_space[2] = n_cam_tag_space[2]
+                                        n_cam_tag_space[2] = -n_cam_tag_space[2]
 
                                         '''PONTO da posição da camera no ESPAÇO DA TAG'''
-                                        posicao_camera = -Rmed.T @ tmed   
+                                        posicao_camera = Rmed.T @ tmed   
                                         
                                         posicao_camera[1] = 0
-                                        posicao_camera[2] = abs(posicao_camera[2])
+                                        posicao_camera[2] = -posicao_camera[2]
                                         x0 = posicao_camera[0]
                                         z0 = posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
                                         
-                                        z_lin =  z0 + 0.25
+                                        z_lin =  z0 + 0.1 
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
-                                        w = np.array(posicao_camera) - np.array([0.0, 0.0, 0.25])
 
-                                        cross_lin = np.cross(-n_cam_tag_space, w)
-                                        sinal_lin = np.sign(cross_lin[1])  # componente Y no plano XZ
-                                        theta_lin = sinal_lin * angulo_entre_rad(-n_cam_tag_space, w)
-                                        theta_lin = theta_lin + np.pi/2 if theta_lin < 0 else np.pi/2 - theta_lin
-                                        
-                                        cross_volta = np.cross(-w, [0,0,-1])
-                                        sinal_volta = np.sign(cross_volta[1])
-                                        theta_volta = sinal_volta * angulo_entre_rad(w, [0,0,1])
+                                        w = np.array([0.0, 0.0, 0.3]) - np.array(posicao_camera)
+
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space,-w) if x0 > 0 else angulo_entre_rad(n_cam_tag_space, -w)
+                                        theta_volta = angulo_entre_rad([0,0,-1], w) if x0 < 0 else -angulo_entre_rad(w, [0,0,-1])
                                                                                 
+
+                                        #theta_lin = np.arctan2(n_cam_tag_space, w)
+                                        #theta_volta = np.(w)
                                         print(f"x_t : {tmed[0]} , z_t : {tmed[2]}") 
                                         print(f"w: {w}, n_cam: {n_cam_tag_space}") 
                                         print(f"x0: {x0}, z0: {z0}, z': {z_lin}, rho_lin {rho_lin}")
@@ -267,6 +270,8 @@ def _vision_worker():
                                         _, pitch, _ = R.from_matrix(Rmed).as_euler('zyx', degrees=True)
                                         print(pitch)
                                         
+                                        distancia = np.linalg.norm(tmed)
+
                                         if abs(pitch) < 3 and rho_lin < 0.28: config.estado = "ideal"; estado_anterior = "buscar" # AJUSTAR RHO_LIN ! !
                                         else: config.estado = "aproximar"; config.etapa_busca = 0;
 
