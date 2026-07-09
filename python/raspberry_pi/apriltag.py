@@ -70,7 +70,7 @@ stop_event = threading.Event()
 busca = [f"1 {np.pi/4}\n",f"1 {np.pi/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 -{np.pi*1.05/4}\n",f"1 -{np.pi*1.05/4}\n", f"1 {np.pi/4}\n", f"1 {np.pi/4}\n", "2 0.35\n"]
 
 aprox = ["","",""]
-ideal = ["3 100", "3 65",f"2 0.35",f"3 65",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
+ideal = ["3 100", "3 60",f"2 0.35",f"3 65",f"2 -0.2",f"2 -0.2",f"2 -0.2", f"3 -100"] # AJUSTAR VALORES
 etapa_ideal = 0
 estado_anterior = "buscar"
 x0, z0, z_lin = 0.0, 0.0, 0.0
