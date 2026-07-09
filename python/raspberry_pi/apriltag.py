@@ -145,12 +145,7 @@ def angulo_entre_rad(v1,v2):
     
     cos_angulo = np.clip(produto_escalar / (norma_v1 * norma_v2), -1.0, 1.0)
     
-    angulo = np.arccos(cos_angulo)
-
-    cross = np.cross(v2, v1)
-    sinal = np.sign(cross[1])
-
-    return sinal*angulo
+    return np.arccos(cos_angulo)
 
 def media_R(Rs):
     """
