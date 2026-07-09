@@ -248,12 +248,12 @@ def _vision_worker():
                                         z0 = posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
                                         
-                                        z_lin =  z0 + 0.15  
+                                        z_lin =  z0 + 0.1 
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
 
-                                        w = np.array([0.0, 0.0, 0.15]) - np.array(posicao_camera)
+                                        w = np.array([0.0, 0.0, 0.3]) - np.array(posicao_camera)
 
                                         theta_lin = angulo_entre_rad(n_cam_tag_space,-w) if x0 > 0 else angulo_entre_rad(n_cam_tag_space, -w)
                                         theta_volta = angulo_entre_rad([0,0,-1], w) if x0 < 0 else -angulo_entre_rad(w, [0,0,-1])
