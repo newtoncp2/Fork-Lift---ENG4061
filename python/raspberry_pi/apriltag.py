@@ -237,7 +237,7 @@ def _vision_worker():
                                         '''VETOR normal da camera no espaço da tag'''
                                         n_cam_tag_space = Rmed.T @ n_cam_cam_space
                                         n_cam_tag_space[1] = 0
-                                        if n_cam_tag_space[2] > 0: n_cam_tag_space *= -1
+                                        n_cam_tag_space *= -1
 
                                         '''PONTO da posição da camera no ESPAÇO DA TAG'''
                                         posicao_camera = Rmed.T @ tmed   
@@ -245,7 +245,7 @@ def _vision_worker():
                                         posicao_camera[1] = 0
                                         posicao_camera[2] *= -1
                                         x0 = posicao_camera[0]
-                                        z0 = -posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
+                                        z0 = posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
                                         
                                         z_lin =  z0 + 0.3  
