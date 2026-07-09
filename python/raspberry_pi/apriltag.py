@@ -172,6 +172,9 @@ def media_R(Rs):
     r_medio = R.from_quat(quat_medio)
     return r_medio.as_matrix()
 
+def normalizar_angulo(theta):
+    return (theta + np.pi) % (2 * np.pi) - np.pi
+
 def _vision_worker():
     """Process frames for tags if detector is available."""
     #global last_tag, ler_tag, cont, x0, z0, z_lin, kx, kz, etapa_busca, aprox_vals, etapa_aprox, estado, estado_anterior
@@ -248,17 +251,19 @@ def _vision_worker():
                                         z0 = posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
                                         
-                                        z_lin =  z0 + 0.1 
+                                        z_lin =  z0 + 0.3 
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
 
                                         w = np.array([0.0, 0.0, 0.3]) - np.array(posicao_camera)
 
-                                        theta_lin = angulo_entre_rad(n_cam_tag_space,-w) if x0 > 0 else angulo_entre_rad(n_cam_tag_space, -w)
-                                        theta_volta = angulo_entre_rad([0,0,-1], w) if x0 < 0 else -angulo_entre_rad(w, [0,0,-1])
-                                                                                
+                                        theta_lin = angulo_entre_rad(n_cam_tag_space,w)
+                                        theta_lin = normalizar_angulo(theta_lin)
 
+                                        theta_volta = angulo_entre_rad([0,0,-1], w)
+                                        theta_volta = normalizar_angulo(theta_volta)                                        
+                                        
                                         #theta_lin = np.arctan2(n_cam_tag_space, w)
                                         #theta_volta = np.(w)
                                         print(f"x_t : {tmed[0]} , z_t : {tmed[2]}") 
