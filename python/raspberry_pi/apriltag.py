@@ -332,7 +332,7 @@ def _vision_worker():
 
                         if msg.startswith("fim modo"):
                             msg = "" 
-                            config.estado = "ler" if estado_anterior != "ideal" else "ideal" 
+                            config.estado = "ler" if estado_anterior != "aproximar" else "aproximar" # MUDAR ESTAR MERDA PARA IDEAL PORRA 
 
         except Exception as e:
             logger.debug(f"Vision processing error: {e}")
