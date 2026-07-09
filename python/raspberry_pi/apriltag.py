@@ -251,7 +251,7 @@ def _vision_worker():
 
                                         cross_lin = np.cross(-n_cam_tag_space, w)
                                         sinal_lin = np.sign(cross_lin[1])  # componente Y no plano XZ
-                                        theta_lin = sinal_lin * angulo_entre_rad(-n_cam_tag_space, w)
+                                        theta_lin = sinal_lin * angulo_entre_rad(-n_cam_tag_space, w) - np.pi/2
 
                                         cross_volta = np.cross(-w, [0,0,-1])
                                         sinal_volta = np.sign(cross_volta[1])
