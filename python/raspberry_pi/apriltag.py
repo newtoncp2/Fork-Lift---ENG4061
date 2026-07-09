@@ -248,7 +248,7 @@ def _vision_worker():
                                         z0 = posicao_camera[2] # SE Z0 CHEGA COMO NEGATIVO, z0 = -posicao_camera[2]
                                         '''robo para 0.15 m à frente da câmera'''
                                         
-                                        z_lin =  z0 + 0.3  
+                                        z_lin =  z0 #+ 0.3  
 
                                         rho_lin = (x0**2 + z_lin**2)**0.5
 
