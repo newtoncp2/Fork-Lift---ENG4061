@@ -57,10 +57,10 @@ Navigate through the folders below to explore the specific modules of this proje
 * `/mechanics` - Contains 3D CAD files (.STEP, .STL) and mechanical documentation.
   * **Read the [Mechanical Assembly & Troubleshooting Guide](mechanics/assembly.md)** for details on the Center of Mass, 3D printing parameters, and structural problem-solving.
 
-* `/src` - Contains all the source code.
-  * `/src/arduino` - Low-level motor control and PID implementation.
-  * `/src/python/raspberry_pi` - Web server, AprilTag vision system, and serial communication scripts.
-  * `/src/python/server` - Flask web server and MQTT broker configuration.
+
+* `/arduino` - Low-level motor control and PID implementation.
+* `/python/raspberry_pi` - Web server, AprilTag vision system, and serial communication scripts.
+* `/python/server` - Flask web server and MQTT broker configuration.
 * `/electronics` - Additional schematics, wiring diagrams, and project reports.
 * `/telemetry` - Contains the Grafana dashboard JSON template.
 
