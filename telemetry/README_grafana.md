@@ -1,70 +1,70 @@
-# Dashboard de Telemetria - rb_telemetria
+# Telemetry Dashboard - rb_telemetria
 
-Este arquivo (`telemetry_grafana.json`) define um dashboard do Grafana (formato `dashboard.grafana.app/v2`) responsável por exibir em tempo real os dados de telemetria da empilhadeira autônoma do projeto. Ele pode ser importado diretamente no Grafana para recriar o painel de monitoramento.
+This file (`telemetry_grafana.json`) defines a Grafana dashboard (`dashboard.grafana.app/v2` format) responsible for displaying real-time telemetry data from the project's autonomous forklift. It can be imported directly into Grafana to recreate the monitoring panel.
 
-## Visão geral
+## Overview
 
-- **Título do dashboard:** `rb_telemetria`
-- **Fonte de dados:** PostgreSQL/TimescaleDB (datasource `efr0zsd6jbvnke`), dataset `projeto_b`
-- **Tabela consultada:** `rb_emp`
-- **Intervalo de tempo padrão:** últimos 5 minutos (`now-5m` até `now`)
-- **Auto-refresh disponível:** 5s, 10s, 30s, 1m, 5m, 15m, 30m, 1h, 2h, 1d (nenhum intervalo fixo é aplicado por padrão)
-- **Fuso horário:** o do navegador
+- **Dashboard Title:** `rb_telemetria`
+- **Data Source:** PostgreSQL/TimescaleDB (datasource `efr0zsd6jbvnke`), dataset `projeto_b`
+- **Queried Table:** `rb_emp`
+- **Default Time Range:** Last 5 minutes (`now-5m` to `now`)
+- **Available Auto-refresh:** 5s, 10s, 30s, 1m, 5m, 15m, 30m, 1h, 2h, 1d (no fixed interval is applied by default)
+- **Timezone:** Browser's timezone
 
-## Painéis
+## Panels
 
-| Painel | Título | Tipo | Coluna de origem | Cálculo/Query | Faixa (min-max) |
+| Panel | Title | Type | Source Column | Calculation/Query | Range (min-max) |
 |---|---|---|---|---|---|
-| panel-1 | Tensão | gauge | `tensao_v` | Média por bucket de 1s | 11 a 12.4 |
-| panel-2 | Corrente | gauge | `corrente_ma` | Média por bucket de 1s | 0 a 3 |
-| panel-3 | Potência | gauge | `potencia_mw` | Média por bucket de 1s | 0 a 37.2 |
-| panel-4 | RPM esquerdo | gauge | `rpm_esq` | Média por bucket de 1s | 0 a 150 |
-| panel-5 | RPM direito | gauge | `rpm_dir` | Média por bucket de 1s | 0 a 150 |
-| panel-6 | Modo | stat | `tipo` | Última leitura (`ORDER BY created_at DESC LIMIT 1`) | - |
-| panel-7 | Falha no Motor de Passo? | stat | `falha_motor_passo` | Última leitura (`ORDER BY created_at DESC LIMIT 1`) | - |
+| panel-1 | Voltage | gauge | `tensao_v` | Average per 1s bucket | 11 to 12.4 |
+| panel-2 | Current | gauge | `corrente_ma` | Average per 1s bucket | 0 to 3 |
+| panel-3 | Power | gauge | `potencia_mw` | Average per 1s bucket | 0 to 37.2 |
+| panel-4 | Left RPM | gauge | `rpm_esq` | Average per 1s bucket | 0 to 150 |
+| panel-5 | Right RPM | gauge | `rpm_dir` | Average per 1s bucket | 0 to 150 |
+| panel-6 | Mode | stat | `tipo` | Latest reading (`ORDER BY created_at DESC LIMIT 1`) | - |
+| panel-7 | Stepper Motor Failure? | stat | `falha_motor_passo` | Latest reading (`ORDER BY created_at DESC LIMIT 1`) | - |
 
-### Painéis 1 a 5 (gauges de séries temporais)
+### Panels 1 to 5 (Time Series Gauges)
 
-Utilizam `time_bucket('1 second', created_at)` do TimescaleDB para agregar os dados em janelas de 1 segundo e calcular a média (`AVG`) da coluna correspondente dentro do intervalo de tempo selecionado no dashboard (`$__timeFilter(created_at)`). Todos exibem sparkline e usam gradiente de cor contínuo (verde a vermelho), exceto Corrente e RPM direito, que usam limiares em modo percentual (60% amarelo, 80% vermelho).
+These panels use TimescaleDB's `time_bucket('1 second', created_at)` to aggregate data into 1-second windows and calculate the average (`AVG`) of the corresponding column within the time range selected on the dashboard (`$__timeFilter(created_at)`). All of them display a sparkline and use a continuous color gradient (green to red), except Current and Right RPM, which use percentage-based thresholds (60% yellow, 80% red).
 
-### Painel 6 - Modo
+### Panel 6 - Mode
 
-Mostra o modo de operação atual do sistema, traduzindo o valor numérico da coluna `tipo` para um rótulo textual:
+Displays the system's current operation mode, translating the numerical value from the `tipo` column into a textual label:
 
 - `0` -> Manual
-- `1` -> Autônomo
-- `2` -> Procura
-- `3` -> Garfo
-- Qualquer outro valor -> Desconhecido
+- `1` -> Autonomous
+- `2` -> Search
+- `3` -> Fork
+- Any other value -> Unknown
 
-### Painel 7 - Falha no Motor de Passo?
+### Panel 7 - Stepper Motor Failure?
 
-Mostra o status mais recente da coluna `falha_motor_passo`, traduzido para texto:
+Displays the latest status from the `falha_motor_passo` column, translated into text:
 
-- `0` -> Não
-- `1` -> Sim
-- Qualquer outro valor -> Desconhecido
+- `0` -> No
+- `1` -> Yes
+- Any other value -> Unknown
 
-## Layout na tela
+## Screen Layout
 
-Os painéis são organizados em um grid de 22 colunas, em três linhas:
+The panels are organized in a 22-column grid, across three rows:
 
-1. **Linha 1** (altura 6): Tensão, Corrente e Potência lado a lado.
-2. **Linha 2** (altura 6): Falha no Motor de Passo, RPM esquerdo e RPM direito lado a lado.
-3. **Linha 3** (altura 4): Modo, ocupando a largura total (22 colunas).
+1. **Row 1** (height 6): Voltage, Current, and Power side by side.
+2. **Row 2** (height 6): Stepper Motor Failure, Left RPM, and Right RPM side by side.
+3. **Row 3** (height 4): Mode, taking up the full width (22 columns).
 
-## Requisitos para reutilização
+## Reusability Requirements
 
-Para que este dashboard funcione em outro ambiente, é necessário:
+For this dashboard to work in another environment, the following is required:
 
-1. Ter uma instância do Grafana (Cloud ou self-hosted) compatível com o schema `dashboard.grafana.app/v2`.
-2. Configurar um datasource do tipo `grafana-postgresql-datasource` apontando para o banco PostgreSQL/TimescaleDB que contém o dataset `projeto_b` e a tabela `rb_emp`.
-3. Atualizar o campo `datasource.name` em cada painel (`efr0zsd6jbvnke`) para o UID do datasource configurado no novo ambiente, caso seja diferente.
-4. Garantir que a tabela `rb_emp` possua, no mínimo, as colunas: `created_at`, `tensao_v`, `corrente_ma`, `potencia_mw`, `rpm_esq`, `rpm_dir`, `tipo` e `falha_motor_passo`.
+1. A Grafana instance (Cloud or self-hosted) compatible with the `dashboard.grafana.app/v2` schema.
+2. A configured `grafana-postgresql-datasource` pointing to the PostgreSQL/TimescaleDB database that contains the `projeto_b` dataset and the `rb_emp` table.
+3. Update the `datasource.name` field in each panel (`efr0zsd6jbvnke`) to match the UID of the datasource configured in the new environment, if different.
+4. Ensure the `rb_emp` table has at least the following columns: `created_at`, `tensao_v`, `corrente_ma`, `potencia_mw`, `rpm_esq`, `rpm_dir`, `tipo`, and `falha_motor_passo`.
 
-## Importação no Grafana
+## Importing into Grafana
 
-1. No Grafana, acessar **Dashboards > New > Import**.
-2. Colar o conteúdo de `telemetry_grafana.json` ou fazer upload do arquivo.
-3. Selecionar/ajustar o datasource PostgreSQL correspondente.
-4. Confirmar a importação.
+1. In Grafana, go to **Dashboards > New > Import**.
+2. Paste the contents of `telemetry_grafana.json` or upload the file.
+3. Select or adjust the corresponding PostgreSQL datasource.
+4. Confirm the import.
